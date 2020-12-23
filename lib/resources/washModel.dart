@@ -189,6 +189,33 @@ class Wash {
     this.time = timeMap;
   }
 
+  static String timesStr(int start, int finish) {
+    String washDate;
+    DateTime startTime = new DateTime.fromMillisecondsSinceEpoch(start * 1000);
+    washDate = DateFormat('H:mm').format(startTime);
+
+    if (finish != null) {
+      DateTime endTime = new DateTime.fromMillisecondsSinceEpoch(finish * 1000);
+      String endTimeFormatted = DateFormat('H:mm').format(endTime);
+      Duration difference = endTime.difference(startTime);
+      if (difference.inDays > 0) {
+        endTimeFormatted = '${endTime.day} ' +
+            monthsAbbr[startTime.month] +
+            ' ' +
+            DateFormat('H:mm').format(endTime);
+      }
+
+      washDate +=
+          ' - ' + endTimeFormatted + ' (' + _formatDuration(difference) + ')';
+    }
+    return washDate;
+  }
+
+  static String getDate(int ts) {
+    DateTime dt = new DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+    return '${dt.day} ' + monthsAbbr[dt.month];
+  }
+
   static String _formatDuration(Duration dur) {
     String formatted = "";
     if (dur.inHours > 0) {

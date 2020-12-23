@@ -17,16 +17,20 @@ class RootProvider with ChangeNotifier {
   int value = 0;
   BuildContext rcontext;
   int navIndex = 0, xPageCount, xTotalCount = 0, xCurrentPage = 0;
-  Map<String, dynamic> washFormMap = {};
+  Map<String, dynamic> washFormMap = {'washers': []},
+      subserv2Map = {'washers': []},
+      addServMap = {'washers': []};
   Map<int, Wash> washesMap = {};
   List categories,
       washers,
       services,
-      activeWashers; //it's List<Map<String, String>>
+      activeWashers, //it's List<Map<String, String>>
+      discounts; //List<Map<String, String>>
   List prices; //it's List<Map<String, dynamic>>
   Map<int, String> ctgNameMap = {}, servNameMap = {};
   Map<int, Map> washersMap = {};
   final DatabaseHelper db = DatabaseHelper();
+  StreamController<Map> mapStrmCtrl = StreamController<Map>.broadcast();
 
   /*
    * selectedWashers is used in create, washes who are 'in_service' will be populated and will be preselected
@@ -49,6 +53,13 @@ class RootProvider with ChangeNotifier {
 
   void closeStreams() {
     db.closeDb();
+    mapStrmCtrl.close();
+  }
+
+  void sinkMap(Map val) {
+    if (!mapStrmCtrl.isClosed && mapStrmCtrl.hasListener) {
+      mapStrmCtrl.sink.add(val);
+    }
   }
 
   void plateQueryRequest(String plate) async {
@@ -97,7 +108,7 @@ class RootProvider with ChangeNotifier {
   }
 
   void clearFormMap() {
-    washFormMap = {};
+    washFormMap = {'washers': []};
     updateWashers = [];
     cameraImgs = [];
     formPriceShow = null;
@@ -187,6 +198,7 @@ class RootProvider with ChangeNotifier {
       requestWashers();
       requestPrices();
       requestActiveWashers();
+      requestDiscounts();
     }
 
     /* if (categories == null) {
@@ -247,7 +259,7 @@ class RootProvider with ChangeNotifier {
         Endpoints.washers, /* queryParameters: {'updated_at': ts} */
       );
       //cprint('washers resp: ${response.data}');
-      cprint('washers resp: ${response.data.length}');
+      //cprint('washers resp: ${response.data.length}');
       if (response.data != null && response.data.isNotEmpty) {
         //await db.import('user', response.data);
         populateWashers(response.data);
@@ -275,6 +287,20 @@ class RootProvider with ChangeNotifier {
       }
     } on DioError catch (e) {
       cprint('Error requestActiveWashers: $e');
+    }
+  }
+
+  Future<void> requestDiscounts() async {
+    //int ts = await db.getMaxTimestamp('user');
+    try {
+      Response response = await Dio().get(Endpoints.wash + '/discounts');
+      //cprint('active washers resp: ${response.data}');
+      if (response.data != null && response.data.isNotEmpty) {
+        //await db.import('user', response.data);
+        discounts = response.data;
+      }
+    } on DioError catch (e) {
+      cprint('Error requestDiscounts: $e');
     }
   }
 
@@ -339,8 +365,26 @@ class RootProvider with ChangeNotifier {
     }
   }
 
-  void formWasher(String id, bool add, String mode) {
-    if (mode == 'insert') {
+  void addServSelect(String field, String id) {
+    addServMap[field] = id;
+    notifyListeners();
+  }
+
+//only one map is actual at once. Just used common method.
+  void formWasher(String id, bool add) {
+    if (add) {
+      if (!washFormMap.containsKey('washers')) {
+        washFormMap['washers'] = <String>[];
+      }
+      washFormMap['washers'].add(id);
+      subserv2Map['washers'].add(id);
+      addServMap['washers'].add(id);
+    } else {
+      washFormMap['washers'].remove(id);
+      subserv2Map['washers'].remove(id);
+      addServMap['washers'].remove(id);
+    }
+    /* if (mode == 'insert') {
       if (add) {
         selectedWashers.add(id);
       } else {
@@ -352,7 +396,7 @@ class RootProvider with ChangeNotifier {
       } else {
         updateWashers.remove(id);
       }
-    }
+    } */
     notifyListeners();
   }
 
@@ -425,21 +469,76 @@ class RootProvider with ChangeNotifier {
     //cprint('duration $duration status $durStatus');
   }
 
-  void requestFinish(int id) async {
+  void requestWash(int id) async {
     try {
       String authKey = session.getString('authKey');
-      Response response = await Dio().post(Endpoints.finish,
-          data: {'id': id},
+      Response response = await Dio().get(Endpoints.wash + '/$id',
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
-      Map<String, dynamic> resp = response.data;
-      //cprint('resp: ${response.data}');
-      if (resp != null && resp.containsKey('id')) {
+      var resp = response.data; //Map<String<dynamic>
+      //cprint('requestWash resp: ${response.data}');
+      if (resp != null) {
         washesMap[resp['id']] = new Wash.fromJson(resp);
         notifyListeners();
       }
     } catch (e) {
       print(e);
     }
+  }
+
+  void requestFinish(int washId, int washServiceId) async {
+    try {
+      sinkMap({'finish': true});
+      String authKey = session.getString('authKey');
+      Response response = await Dio().post(Endpoints.finish,
+          data: {'id': washServiceId},
+          options: Options(headers: {'Authorization': "Bearer $authKey"}));
+      var resp = response.data; //bool
+      sinkMap({'finish': false});
+      cprint('requestFinish resp: ${response.data}');
+      if (resp) {
+        requestWash(washId);
+        notifyListeners();
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<bool> requestAddService(int washId) async {
+    try {
+      sinkMap({'addService': true});
+      String authKey = session.getString('authKey');
+      Response response = await Dio().post(Endpoints.wash + '/addservice',
+          data: addServMap,
+          options: Options(headers: {'Authorization': "Bearer $authKey"}));
+      var resp = response.data; //bool
+      sinkMap({'addService': false});
+      cprint('requestAddService resp: ${response.data}');
+      if (resp == true) {
+        requestWash(washId);
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      print(e);
+    }
+    return false;
+  }
+
+  void startSecond(int washId, int washServiceId) async {
+    sinkMap({'second': true});
+    try {
+      Response response = await Dio().post(Endpoints.wash + '/start',
+          data: {'id': washServiceId, 'washers': subserv2Map['washers']});
+      var resp = response.data;
+      cprint('startSecond $resp');
+      requestWash(washId);
+      notifyListeners();
+    } catch (e) {
+      print(e);
+      sinkMap({'second': false});
+    }
+    sinkMap({'second': false});
   }
 
   void washPaid(Wash wash) async {
@@ -449,11 +548,13 @@ class RootProvider with ChangeNotifier {
   }
 
   void requestPaid(int id) async {
+    sinkMap({'paid': true});
     try {
       String authKey = session.getString('authKey');
       Response response = await Dio().post(Endpoints.paid,
           data: {'id': id},
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
+      sinkMap({'paid': false});
       // cprint('resp: ${response.data}');
       if (response.data) {
         washesMap[id].setPaid = 1;
@@ -815,7 +916,7 @@ class RootProvider with ChangeNotifier {
   void populateServices(List src) {
     services = src;
     services.forEach((srvMap) {
-      var severId;
+      /* var severId;
       if (srvMap.containsKey('server_id')) {
         severId = srvMap['server_id'];
       } else {
@@ -824,7 +925,7 @@ class RootProvider with ChangeNotifier {
       if (severId is String) {
         severId = int.parse(severId);
       }
-      servNameMap[severId] = srvMap['title'];
+      servNameMap[severId] = srvMap['title']; */
     });
   }
 
@@ -910,7 +1011,7 @@ class RootProvider with ChangeNotifier {
       washFormError += 'Выберите услугу ';
       good = false;
     } */
-    if (mode == 'insert' && selectedWashers.length > 0) {
+    /* if (mode == 'insert' && selectedWashers.length > 0) {
       for (int i = 0; i < selectedWashers.length; i++) {
         //washFormMap['washers[$i]'] = selectedWashers[i];
       }
@@ -920,7 +1021,8 @@ class RootProvider with ChangeNotifier {
         //washFormMap['washers[$i]'] = updateWashers[i];
       }
       washFormMap['washers'] = updateWashers;
-    } else {
+    } */
+    if (washFormMap['washers'].length == 0) {
       washFormError += 'Выберите персонал ';
       good = false;
     }

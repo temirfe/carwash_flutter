@@ -37,3 +37,25 @@ List<String> monthsAbbr = [
   'Ноя',
   'Дек'
 ];
+
+Widget lbl(String title) {
+  return Container(
+      width: 100.0,
+      child: Text(title, style: TextStyle(fontSize: 12.0, color: Colors.grey)));
+}
+
+Widget text16(String tx, {Color clr}) {
+  TextStyle ts = TextStyle(fontSize: 16.0);
+  if (clr != null) {
+    ts = TextStyle(fontSize: 16.0, color: clr);
+  }
+  return Text(tx, style: ts);
+}
+
+Text textLink(String str, {double size}) {
+  TextStyle ts = TextStyle(color: Colors.blue[300]);
+  if (size != null) {
+    ts = TextStyle(color: Colors.blue[300], fontSize: size);
+  }
+  return Text(str, style: ts);
+}

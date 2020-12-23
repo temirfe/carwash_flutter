@@ -12,6 +12,7 @@ import 'package:carwash/resources/endpoints.dart';
 import 'package:carwash/resources/dbhelper.dart';
 import 'washForm.dart';
 import 'photoView.dart';
+import 'addService.dart';
 
 class WashView extends StatefulWidget {
   //final int id;
@@ -31,48 +32,52 @@ class _WashViewState extends State<WashView> {
   void initState() {
     super.initState();
     prov = Provider.of<RootProvider>(context, listen: false);
-    futureWashers = _populateWashers(prov, widget.id);
-    futureUpd = _populateUpdates(widget.id);
+    //futureWashers = _populateWashers(prov, widget.id);
+    //futureUpd = _populateUpdates(widget.id);
+    prov.subserv2Map = {'washers': []};
+    prov.addServMap = {'washers': []};
+    prov.activeWashers.forEach((am) {
+      if (am['service_num'] == '2') {
+        prov.subserv2Map['washers'].add(am['user_id']);
+      }
+      if (am['service_num'] == '3') {
+        prov.addServMap['washers'].add(am['user_id']);
+      }
+    });
   }
 
   Widget build(BuildContext context) {
     int mid = widget.id;
-    String washDate;
+    //String washDate;
+    Text paidString;
 
     return Consumer<RootProvider>(builder: (context, prov, child) {
       Wash wash = prov.washesMap[mid];
       if (wash == null) {
         return Container();
       }
-      Text paidString;
-      washDate = '${wash.time['start']}';
+      //washDate = '${wash.time['start']}';
       List<Widget> actionBtns = [];
-      Widget startedAtWidget = SizedBox();
+      //Widget startedAtWidget = SizedBox();
 
       if (wash.paid == null) {
         paidString =
             Text('Не оплачено', style: TextStyle(color: Colors.red[300]));
-        actionBtns.add(RaisedButton(
-          onPressed: () {
-            //prov.requestPaid(mid);
-            prov.washPaid(wash);
-          },
-          color: Colors.blue[300],
-          child: Text('Оплачено', style: TextStyle(color: Colors.white)),
-        ));
+        actionBtns.add(paidBtn(mid));
       } else {
         paidString =
             Text('Оплачено', style: TextStyle(color: Colors.green[300]));
       }
-      if (wash.finishedAt == null) {
+
+      /* if (wash.finishedAt == null) {
         startedAtWidget = startStrBuild(wash.startedAt, false);
         actionBtns.add(SizedBox(
           width: 12.0,
         ));
         actionBtns.add(RaisedButton(
           onPressed: () {
-            //prov.requestFinish(mid);
-            prov.finishWash(wash);
+            prov.requestFinish(mid);
+            //prov.finishWash(wash);
           },
           color: Colors.green,
           child: Text('Завершить', style: TextStyle(color: Colors.white)),
@@ -80,71 +85,37 @@ class _WashViewState extends State<WashView> {
       } else {
         washDate +=
             ' - ' + wash.time['end'] + ' (' + wash.time['duration'] + ')';
-      }
+      } */
 
       List<Widget> viewList = [
-        Text('Гос номер', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
-        Text(
-          wash.plate,
-          style: TextStyle(fontSize: 16.0),
-        ),
-        SizedBox(height: 12.0),
+        Row(children: [lbl('Гос номер'), text16(wash.plate)]),
+        SizedBox(height: 10.0),
         pic(wash),
         marka(wash),
-        Text('Категория', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
-        Text(
-          wash.category,
-          style: TextStyle(fontSize: 16.0),
-        ),
-        SizedBox(height: 12.0),
-        Text('Услуга', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
-        Text(
-          wash.service,
-          style: TextStyle(fontSize: 16.0),
-        ),
-        SizedBox(height: 12.0),
-        Text('Персонал', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
+        SizedBox(height: 10.0),
+        phone(wash.phone),
+        Row(children: [lbl('Категория'), text16(wash.category)]),
+        SizedBox(height: 10.0),
+        Row(children: [
+          lbl('Цена'),
+          text16(wash.price.toString()),
+          SizedBox(width: 12.0),
+          paidString
+        ]),
+        SizedBox(height: 10.0),
+        Row(children: [lbl('Услуга'), text16(wash.service)]),
+        SizedBox(height: 10.0),
+        services(wash.id, wash.services)
+        /* Text('Персонал', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
         washersWidget(wash),
-        SizedBox(height: 12.0),
+        SizedBox(height: 10.0),
         Text('Время', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
         Text(
           washDate,
           style: TextStyle(fontSize: 16.0),
         ),
-        startedAtWidget,
-        SizedBox(height: 12.0),
-        Text('Цена', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
-        Row(
-          children: [
-            Text(
-              '${wash.price}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(width: 12.0),
-            paidString
-          ],
-        ),
+        startedAtWidget, */
       ];
-
-      if (wash.phone != null && wash.phone != '') {
-        _launchCaller() async {
-          var url = "tel:${wash.phone}";
-          if (await canLaunch(url)) {
-            await launch(url);
-          }
-        }
-
-        viewList.add(SizedBox(height: 12.0));
-        viewList.add(Text('Телефон',
-            style: TextStyle(fontSize: 12.0, color: Colors.grey)));
-
-        viewList.add(
-          InkWell(
-            child: Text(wash.phone, style: TextStyle(fontSize: 16.0)),
-            onTap: _launchCaller,
-          ),
-        );
-      }
 
       if (wash.comment != null && wash.comment != '') {
         viewList.add(SizedBox(height: 12.0));
@@ -157,40 +128,187 @@ class _WashViewState extends State<WashView> {
         ));
       }
 
-      viewList.add(updWidget(wash, prov));
+      viewList.add(updWidget(wash));
 
       viewList.add(SizedBox(height: 24.0));
       viewList.add(Row(
         children: actionBtns,
         mainAxisAlignment: MainAxisAlignment.end,
       ));
+      viewList.add(SizedBox(height: 24.0));
 
       return Scaffold(
-        appBar: AppBar(
-          title: Text('Мойка ID $mid'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                //prov.formRequests();
-                Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (BuildContext context) => WashForm(widget.id)),
-                );
-              },
-            ),
-            SizedBox(
-              width: 10.0,
-            )
-          ],
-        ),
-        body: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          children: viewList,
+          appBar: AppBar(
+            title: Text(Wash.getDate(wash.startedAt) + ' (id$mid)'),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  //prov.formRequests();
+                  Navigator.push(
+                    context,
+                    new MaterialPageRoute(
+                        builder: (BuildContext context) => WashForm(widget.id)),
+                  );
+                },
+              ),
+              SizedBox(
+                width: 10.0,
+              )
+            ],
+          ),
+          body: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            children: viewList,
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.miniStartFloat,
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                new MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        AddService(widget.id, wash.categoryId)),
+              );
+            },
+            backgroundColor: Colors.green,
+            label: Text('Добавить услугу'),
+            icon: Icon(Icons.add_circle),
+          ));
+    });
+  }
+
+  Widget services(int washId, List services) {
+    List<Widget> list = [];
+    bool hasntFinished =
+        false; //subserv2 cannot be started before subserv1 is finished;
+    services.forEach((servMap) {
+      list.add(text16(servMap['title'], clr: Colors.blue));
+      if (servMap['washers'] != '') {
+        list.add(text16(servMap['washers']));
+      }
+      if (servMap['finished_at'] != null) {
+        list.add(text16(
+            Wash.timesStr(servMap['started_at'], servMap['finished_at'])));
+      } else if (servMap['started_at'] != null) {
+        hasntFinished = true;
+        list.add(startStrBuild(servMap['started_at'], false));
+        list.add(finishBtn(washId, servMap['id']));
+      } else {
+        if (hasntFinished) {
+          list.add(Text('В ожидании'));
+        } else {
+          list = washersSel(list);
+          list.add(startBtn(washId, servMap['id']));
+        }
+      }
+      list.add(Divider());
+    });
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: list);
+  }
+
+  Widget startBtn(int washId, int wsId) {
+    Widget btnChild = Text('Начать', style: TextStyle(color: Colors.white));
+    return StreamBuilder<Map>(
+      stream: prov.mapStrmCtrl.stream,
+      builder: (context, AsyncSnapshot<Map> snapshot) {
+        if (snapshot.hasData &&
+            snapshot.data.containsKey('second') &&
+            snapshot.data['second']) {
+          btnChild = Container(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
+        }
+        return RaisedButton(
+          onPressed: () {
+            prov.startSecond(washId, wsId);
+          },
+          color: Colors.green,
+          child: btnChild,
+        );
+      },
+    );
+  }
+
+  Widget paidBtn(int washId) {
+    Widget btnChild = Text('Оплачено', style: TextStyle(color: Colors.white));
+    return StreamBuilder<Map>(
+      stream: prov.mapStrmCtrl.stream,
+      builder: (context, AsyncSnapshot<Map> snapshot) {
+        if (snapshot.hasData &&
+            snapshot.data.containsKey('paid') &&
+            snapshot.data['paid']) {
+          btnChild = Container(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
+        }
+        return RaisedButton(
+          onPressed: () {
+            prov.requestPaid(washId);
+            //prov.washPaid(wash);
+          },
+          color: Colors.blue[300],
+          child: btnChild,
+        );
+      },
+    );
+  }
+
+  Widget finishBtn(int washId, int washServiceId) {
+    Widget btnChild = Text('Завершить', style: TextStyle(color: Colors.white));
+    return StreamBuilder<Map>(
+      stream: prov.mapStrmCtrl.stream,
+      builder: (context, AsyncSnapshot<Map> snapshot) {
+        if (snapshot.hasData &&
+            snapshot.data.containsKey('finish') &&
+            snapshot.data['finish']) {
+          btnChild = Container(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
+        }
+        return RaisedButton(
+          onPressed: () {
+            prov.requestFinish(washId, washServiceId);
+          },
+          color: Colors.green,
+          child: btnChild,
+        );
+      },
+    );
+  }
+
+  List washersSel(List widList) {
+    prov.washers.forEach((map) {
+      bool washerBool = false;
+      prov.subserv2Map['washers'].forEach((wid) {
+        if (wid == map['id']) {
+          washerBool = true;
+        }
+      });
+      widList.add(
+        ListTileTheme(
+          contentPadding: EdgeInsets.all(0),
+          child: CheckboxListTile(
+            dense: true,
+            title: new Text(map['username']),
+            controlAffinity: ListTileControlAffinity.leading,
+            value: washerBool,
+            onChanged: (bool value) {
+              prov.formWasher(map['id'], value);
+            },
+          ),
         ),
       );
     });
+    return widList;
   }
 
   Widget washersWidget(Wash wash) {
@@ -214,7 +332,7 @@ class _WashViewState extends State<WashView> {
     );
   }
 
-  Widget updWidget(Wash wash, RootProvider prov) {
+  Widget updWidgetDb(Wash wash, RootProvider prov) {
     // cprint('updWidget build');
     List<Widget> updRows = [];
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -275,19 +393,53 @@ class _WashViewState extends State<WashView> {
     );
   }
 
-  Widget updWidgetServer(Wash wash) {
+  Widget updWidget(Wash wash) {
     List<Widget> updRows = [];
     if (wash.updates != null && wash.updates.isNotEmpty) {
       updRows.add(SizedBox(height: 12.0));
       updRows.add(Text('Изменения',
           style: TextStyle(fontSize: 12.0, color: Colors.grey)));
-      wash.updates.forEach((upd) {
-        updRows.add(Text(
-          upd,
-          style: TextStyle(fontSize: 16.0),
-        ));
+      wash.updates.forEach((updRow) {
+        List<Widget> updText = [];
+        String oldVal, newVal;
+        if (updRow['field'] == 'service_id') {
+          oldVal = prov.servNameMap[int.parse(updRow['old_value'])];
+          newVal = prov.servNameMap[int.parse(updRow['new_value'])];
+        } else if (updRow['field'] == 'category_id') {
+          oldVal = prov.ctgNameMap[int.parse(updRow['old_value'])];
+          newVal = prov.ctgNameMap[int.parse(updRow['new_value'])];
+        } else {
+          oldVal = updRow['old_value'] == null ? 'пусто' : updRow['old_value'];
+          newVal = updRow['new_value'] == null ? 'пусто' : updRow['new_value'];
+        }
+        DateTime dt =
+            DateTime.fromMillisecondsSinceEpoch(updRow['created_at'] * 1000);
+        String upd;
+        if (updRow['username'] != null) {
+          upd = updRow['username'];
+        } else {
+          upd = 'admin';
+        }
+        upd += ' ' +
+            /* DateFormat(DateFormat.ABBR_MONTH_DAY).format(dt) +
+                ', ' + */
+            DateFormat.Hm().format(dt) +
+            ' ';
+        updText.add(Text(upd));
+        updText.add(Text(oldVal, style: TextStyle(color: Colors.red[300])));
+        updText.add(Text('->'));
+        updText.add(Text(newVal, style: TextStyle(color: Colors.green[700])));
+        updRows.add(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: updText),
+          ),
+        );
       });
-      return Column(children: updRows);
+      return Column(
+        children: updRows,
+        crossAxisAlignment: CrossAxisAlignment.start,
+      );
     }
     return Container();
   }
@@ -346,25 +498,40 @@ class _WashViewState extends State<WashView> {
     return Container(height: 0.0, width: 0.0);
   }
 
-  Widget marka(Wash wash) {
-    if (wash.marka != null && wash.marka != '') {
+  Widget phone(String phone) {
+    if (phone != null && phone != '') {
+      _launchCaller() async {
+        var url = "tel:$phone";
+        if (await canLaunch(url)) {
+          await launch(url);
+        }
+      }
+
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Марка', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
-          Text(
-            wash.marka,
-            style: TextStyle(fontSize: 16.0),
-          ),
-          SizedBox(height: 12.0)
+          Row(children: [
+            lbl('Телефон'),
+            InkWell(
+              child: text16(phone),
+              onTap: _launchCaller,
+            )
+          ]),
+          SizedBox(height: 10.0),
         ],
       );
+    }
+    return Container();
+  }
+
+  Widget marka(Wash wash) {
+    if (wash.marka != null && wash.marka != '') {
+      return Row(children: [lbl('Марка'), text16(wash.marka)]);
     }
     return Container(width: 0.0, height: 0.0);
   }
 }
 
-Future<String> _populateWashers(RootProvider prov, int washId) async {
+/* Future<String> _populateWashers(RootProvider prov, int washId) async {
   final DatabaseHelper db = DatabaseHelper();
   List<Map<String, dynamic>> washerUsers = await db.findWashUsers(washId);
   List<String> washerNamesList = [];
@@ -386,4 +553,4 @@ Future<String> _populateWashers(RootProvider prov, int washId) async {
 Future<List<Map<String, dynamic>>> _populateUpdates(int washId) async {
   final DatabaseHelper db = DatabaseHelper();
   return await db.findUpd(washId);
-}
+} */

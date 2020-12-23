@@ -76,6 +76,13 @@ class _WashFormState extends State<WashForm> {
       } else {
         cprint('can edit');
       }
+    } else {
+      prov.washFormMap['washers'] = <String>[];
+      prov.activeWashers.forEach((am) {
+        if (am['service_num'] == '1') {
+          prov.washFormMap['washers'].add(am['user_id']);
+        }
+      });
     }
   }
 
@@ -436,7 +443,11 @@ class _WashFormState extends State<WashForm> {
       ));
       prov.washers.forEach((map) {
         bool washerBool = false;
-        if (mode == 'insert') {
+        if (prov.washFormMap.containsKey('washers') &&
+            prov.washFormMap['washers'].contains(map['id'])) {
+          washerBool = true;
+        }
+        /* if (mode == 'insert') {
           //washerBool =prov.selectedWashers.contains(map['server_id'].toString());
           prov.activeWashers.forEach((am) {
             if (am['user_id'] == map['id'] && am['service_num'] == '1') {
@@ -450,7 +461,7 @@ class _WashFormState extends State<WashForm> {
             washerBool =
                 prov.updateWashers.contains(map['server_id'].toString());
           }
-        }
+        } */
         widList.add(
           ListTileTheme(
             contentPadding: EdgeInsets.all(0),
@@ -461,7 +472,7 @@ class _WashFormState extends State<WashForm> {
               value: washerBool,
               onChanged: canEdit
                   ? (bool value) {
-                      prov.formWasher(map['id'], value, mode);
+                      prov.formWasher(map['id'], value);
                     }
                   : null,
             ),
