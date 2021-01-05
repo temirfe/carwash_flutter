@@ -23,8 +23,7 @@ class Washers extends StatelessWidget {
         /* if (prov.washers[i]['in_service'] == 0) {
           washerBool = false;
         } */
-        if (!prov.selectedWashers
-            .contains(prov.washers[i]['server_id'].toString())) {
+        if (prov.washers[i]['in_service'] == '0') {
           washerBool = false;
         }
         widList.add(
@@ -36,7 +35,7 @@ class Washers extends StatelessWidget {
               controlAffinity: ListTileControlAffinity.leading,
               value: washerBool,
               onChanged: (bool isTicked) {
-                prov.changeWasherStatus(prov.washers[i]['server_id'], isTicked);
+                prov.changeWasherStatus(prov.washers[i]['id'], isTicked);
               },
             ),
           ),

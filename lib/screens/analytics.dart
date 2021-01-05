@@ -8,23 +8,31 @@ Widget analytics(BuildContext context, RootProvider prov) {
   } else {
     int washCount = 0;
     int totalPrice = 0;
+    int discountPrice = 0;
     int totalPricePaid = 0;
+    int discount = 0;
     Map<int, Map<String, dynamic>> washers = {};
     prov.analyticsList.forEach((map) {
       washCount++;
       if (map['price'] != null) {
         totalPrice += map['price'];
       }
-      if (map['paid'] == 1) {
-        totalPricePaid += map['price'];
+      if (map['final_price'] != null) {
+        discountPrice += map['final_price'];
       }
-      map['washers'].forEach((wmap) {
-        int wage = wmap['wage'] == null ? 0 : wmap['wage'];
-        if (washers.containsKey(wmap['id'])) {
-          washers[wmap['id']]['wage'] += wage;
-        } else {
-          washers[wmap['id']] = {'name': wmap['name'], 'wage': wage};
-        }
+      discount = totalPrice - discountPrice;
+      if (map['paid'] == 1) {
+        totalPricePaid += map['final_price'];
+      }
+      map['boxes'].forEach((bmap) {
+        bmap['washers2'].forEach((wmap) {
+          int wage = wmap['wage'] == null ? 0 : wmap['wage'];
+          if (washers.containsKey(wmap['id'])) {
+            washers[wmap['id']]['wage'] += wage;
+          } else {
+            washers[wmap['id']] = {'name': wmap['name'], 'wage': wage};
+          }
+        });
       });
     });
     List<Widget> rows = [
@@ -35,6 +43,14 @@ Widget analytics(BuildContext context, RootProvider prov) {
       Row(children: [
         Container(width: 100.0, child: Text('Сумма:')),
         Text('$totalPrice сом', style: TextStyle(fontSize: 16.0))
+      ]),
+      Row(children: [
+        Container(width: 100.0, child: Text('Скидка:')),
+        Text('$discount сом', style: TextStyle(fontSize: 16.0))
+      ]),
+      Row(children: [
+        Container(width: 100.0, child: Text('Сумма после скидки:')),
+        Text('$discountPrice сом', style: TextStyle(fontSize: 16.0))
       ]),
       Row(children: [
         Container(width: 100.0, child: Text('Оплачено:')),

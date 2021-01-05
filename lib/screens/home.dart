@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     } */
     prov.requestList();
     prov.formRequests();
-    //prov.requestAllday();
+    prov.requestAllday();
 
     //syncWithServer();
 

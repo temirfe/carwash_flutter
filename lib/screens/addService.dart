@@ -135,7 +135,7 @@ class _AddServiceState extends State<AddService> {
             controlAffinity: ListTileControlAffinity.leading,
             value: washerBool,
             onChanged: (bool value) {
-              prov.formWasher(map['id'], value);
+              //prov.formWasher(map['id'], value);
             },
           ),
         ),

@@ -25,11 +25,25 @@ class WashView extends StatefulWidget {
 
 class _WashViewState extends State<WashView> {
   RootProvider prov;
+  Future<String> futureWashers;
+  Future<List<Map<String, dynamic>>> futureUpd;
 
   @override
   void initState() {
     super.initState();
     prov = Provider.of<RootProvider>(context, listen: false);
+    //futureWashers = _populateWashers(prov, widget.id);
+    //futureUpd = _populateUpdates(widget.id);
+    prov.subserv2Map = {'washers': []};
+    prov.addServMap = {'washers': []};
+    prov.activeWashers.forEach((am) {
+      if (am['service_num'] == '2') {
+        prov.subserv2Map['washers'].add(am['user_id']);
+      }
+      if (am['service_num'] == '3') {
+        prov.addServMap['washers'].add(am['user_id']);
+      }
+    });
   }
 
   Widget build(BuildContext context) {
@@ -55,6 +69,24 @@ class _WashViewState extends State<WashView> {
             Text('Оплачено', style: TextStyle(color: Colors.green[300]));
       }
 
+      /* if (wash.finishedAt == null) {
+        startedAtWidget = startStrBuild(wash.startedAt, false);
+        actionBtns.add(SizedBox(
+          width: 12.0,
+        ));
+        actionBtns.add(RaisedButton(
+          onPressed: () {
+            prov.requestFinish(mid);
+            //prov.finishWash(wash);
+          },
+          color: Colors.green,
+          child: Text('Завершить', style: TextStyle(color: Colors.white)),
+        ));
+      } else {
+        washDate +=
+            ' - ' + wash.time['end'] + ' (' + wash.time['duration'] + ')';
+      } */
+
       List<Widget> viewList = [
         Row(children: [lbl('Гос номер'), text16(wash.plate)]),
         SizedBox(height: 10.0),
@@ -64,12 +96,25 @@ class _WashViewState extends State<WashView> {
         phone(wash.phone),
         Row(children: [lbl('Категория'), text16(wash.category)]),
         SizedBox(height: 10.0),
-        priceRow(wash, paidString),
+        Row(children: [
+          lbl('Цена'),
+          text16(wash.price.toString()),
+          SizedBox(width: 12.0),
+          paidString
+        ]),
         SizedBox(height: 10.0),
         Row(children: [lbl('Услуга'), text16(wash.service)]),
         SizedBox(height: 10.0),
-        extraServices(wash.services),
-        boxes(wash.id, wash.boxes)
+        services(wash.id, wash.services)
+        /* Text('Персонал', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
+        washersWidget(wash),
+        SizedBox(height: 10.0),
+        Text('Время', style: TextStyle(fontSize: 12.0, color: Colors.grey)),
+        Text(
+          washDate,
+          style: TextStyle(fontSize: 16.0),
+        ),
+        startedAtWidget, */
       ];
 
       if (wash.comment != null && wash.comment != '') {
@@ -93,72 +138,45 @@ class _WashViewState extends State<WashView> {
       viewList.add(SizedBox(height: 24.0));
 
       return Scaffold(
-        appBar: AppBar(
-          title: Text(Wash.getDate(wash.startedAt) + ' (id$mid)'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                //prov.formRequests();
-                Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (BuildContext context) => WashForm(widget.id)),
-                );
-              },
-            ),
-            SizedBox(
-              width: 10.0,
-            )
-          ],
-        ),
-        body: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          children: viewList,
-        ),
-      );
+          appBar: AppBar(
+            title: Text(Wash.getDate(wash.startedAt) + ' (id$mid)'),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  //prov.formRequests();
+                  Navigator.push(
+                    context,
+                    new MaterialPageRoute(
+                        builder: (BuildContext context) => WashForm(widget.id)),
+                  );
+                },
+              ),
+              SizedBox(
+                width: 10.0,
+              )
+            ],
+          ),
+          body: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            children: viewList,
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.miniStartFloat,
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                new MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        AddService(widget.id, wash.categoryId)),
+              );
+            },
+            backgroundColor: Colors.green,
+            label: Text('Добавить услугу'),
+            icon: Icon(Icons.add_circle),
+          ));
     });
-  }
-
-  Widget priceRow(Wash wash, Text paidString) {
-    List<Widget> lst = [
-      Row(children: [
-        lbl('Цена'),
-        text16(wash.price.toString()),
-        SizedBox(width: 12.0),
-        paidString
-      ])
-    ];
-    if (wash.discount != null && wash.discount.isNotEmpty) {
-      String discStr = wash.discount['discount'].toString();
-      if (wash.discount['is_pct'] == 1) {
-        discStr += '%';
-      } else {
-        discStr += ' сом';
-      }
-      lst.add(Row(children: [lbl('Скидка'), text16(discStr)]));
-      lst.add(Row(children: [
-        lbl('Конечная цена'),
-        text16(wash.finalPrice.toString())
-      ]));
-    }
-    return Column(children: lst);
-  }
-
-  Widget extraServices(List services) {
-    if (services.isNotEmpty) {
-      List<String> titles = [];
-      services.forEach((sm) {
-        titles.add(sm['title']);
-      });
-      return Column(
-        children: [
-          Row(children: [lbl('Доп услуги'), text16(titles.join(', '))]),
-          SizedBox(height: 10.0),
-        ],
-      );
-    }
-    return Container();
   }
 
   Widget services(int washId, List services) {
@@ -182,36 +200,6 @@ class _WashViewState extends State<WashView> {
           list.add(Text('В ожидании'));
         } else {
           list = washersSel(list);
-          list.add(startBtn(washId, servMap['id']));
-        }
-      }
-      list.add(Divider());
-    });
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: list);
-  }
-
-  Widget boxes(int washId, List boxes) {
-    List<Widget> list = [];
-    bool hasntFinished =
-        false; //box2 cannot be started before box1 is finished;
-    boxes.forEach((servMap) {
-      list.add(text16(servMap['title'], clr: Colors.blue));
-      if (servMap['washers'] != '') {
-        list.add(text16(servMap['washers']));
-      }
-      if (servMap['finished_at'] != null) {
-        list.add(text16(
-            Wash.timesStr(servMap['started_at'], servMap['finished_at'])));
-      } else if (servMap['started_at'] != null) {
-        hasntFinished = true;
-        list.add(startStrBuild(servMap['started_at'], false));
-        list.add(finishBtn(washId, servMap['id']));
-      } else {
-        if (hasntFinished) {
-          list.add(Text('В ожидании'));
-        } else {
-          //list = washersSel(list);
           list.add(startBtn(washId, servMap['id']));
         }
       }
@@ -323,6 +311,88 @@ class _WashViewState extends State<WashView> {
     return widList;
   }
 
+  Widget washersWidget(Wash wash) {
+    if (wash.washers != null) {
+      return Text(
+        wash.washers,
+        style: TextStyle(fontSize: 16.0),
+      );
+    }
+    return FutureBuilder<String>(
+      future: futureWashers,
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        if (snapshot.hasData) {
+          return Text(
+            snapshot.data,
+            style: TextStyle(fontSize: 16.0),
+          );
+        }
+        return Container();
+      },
+    );
+  }
+
+  Widget updWidgetDb(Wash wash, RootProvider prov) {
+    // cprint('updWidget build');
+    List<Widget> updRows = [];
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: futureUpd,
+      builder: (BuildContext context,
+          AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+        if (snapshot.hasData && snapshot.data.length > 0) {
+          updRows.add(SizedBox(height: 12.0));
+          updRows.add(Text('Изменения',
+              style: TextStyle(fontSize: 12.0, color: Colors.grey)));
+          snapshot.data.forEach((updRow) {
+            List<Widget> updText = [];
+            String oldVal, newVal;
+            if (updRow['field'] == 'service_id') {
+              oldVal = prov.servNameMap[int.parse(updRow['old_value'])];
+              newVal = prov.servNameMap[int.parse(updRow['new_value'])];
+            } else if (updRow['field'] == 'category_id') {
+              oldVal = prov.ctgNameMap[int.parse(updRow['old_value'])];
+              newVal = prov.ctgNameMap[int.parse(updRow['new_value'])];
+            } else {
+              oldVal =
+                  updRow['old_value'] == null ? 'пусто' : updRow['old_value'];
+              newVal =
+                  updRow['new_value'] == null ? 'пусто' : updRow['new_value'];
+            }
+            DateTime dt = DateTime.fromMillisecondsSinceEpoch(
+                updRow['created_at'] * 1000);
+            String upd;
+            if (updRow['username'] != null) {
+              upd = updRow['username'];
+            } else {
+              upd = 'admin';
+            }
+            upd += ' ' +
+                /* DateFormat(DateFormat.ABBR_MONTH_DAY).format(dt) +
+                ', ' + */
+                DateFormat.Hm().format(dt) +
+                ' ';
+            updText.add(Text(upd));
+            updText.add(Text(oldVal, style: TextStyle(color: Colors.red[300])));
+            updText.add(Text('->'));
+            updText
+                .add(Text(newVal, style: TextStyle(color: Colors.green[700])));
+            updRows.add(
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: updText),
+              ),
+            );
+          });
+          return Column(
+            children: updRows,
+            crossAxisAlignment: CrossAxisAlignment.start,
+          );
+        }
+        return Container();
+      },
+    );
+  }
+
   Widget updWidget(Wash wash) {
     List<Widget> updRows = [];
     if (wash.updates != null && wash.updates.isNotEmpty) {
@@ -331,7 +401,7 @@ class _WashViewState extends State<WashView> {
           style: TextStyle(fontSize: 12.0, color: Colors.grey)));
       wash.updates.forEach((updRow) {
         List<Widget> updText = [];
-        String oldVal = '', newVal = '';
+        String oldVal, newVal;
         if (updRow['field'] == 'service_id') {
           oldVal = prov.servNameMap[int.parse(updRow['old_value'])];
           newVal = prov.servNameMap[int.parse(updRow['new_value'])];
@@ -460,3 +530,27 @@ class _WashViewState extends State<WashView> {
     return Container(width: 0.0, height: 0.0);
   }
 }
+
+/* Future<String> _populateWashers(RootProvider prov, int washId) async {
+  final DatabaseHelper db = DatabaseHelper();
+  List<Map<String, dynamic>> washerUsers = await db.findWashUsers(washId);
+  List<String> washerNamesList = [];
+  washerUsers.forEach((washerUser) {
+    String washer;
+    if (prov.washersMap.containsKey(washerUser['user_id'])) {
+      washer = prov.washersMap[washerUser['user_id']]['name'];
+    } else {
+      washer = 'user${washerUser['user_id']}';
+    }
+    washerNamesList.add(washer);
+  });
+  prov.washesMap[washId].setWasherIds = washerUsers;
+  //cprint('washView washerUsers $washerUsers');
+  //cprint('washView washerIds ${prov.washesMap[washId].washerIds}');
+  return washerNamesList.join(', ');
+}
+
+Future<List<Map<String, dynamic>>> _populateUpdates(int washId) async {
+  final DatabaseHelper db = DatabaseHelper();
+  return await db.findUpd(washId);
+} */

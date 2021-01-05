@@ -12,12 +12,14 @@ class Wash {
   int updatedAt;
   int duration; //in seconds
   final int price;
+  final int finalPrice;
   int paid;
   final String plate;
   final String category;
   final String service;
   String washers;
   Map time;
+  final Map discount;
   final String startTime;
   final String comment;
   final String photo;
@@ -27,6 +29,7 @@ class Wash {
   int durationStatus;
   List<String> washerIds;
   List services; //List<Map>
+  final List boxes; //List<Map> WashBoxes
   final List updates; //string
 
   Wash.fromJson(Map<String, dynamic> fromJson)
@@ -56,6 +59,9 @@ class Wash {
         time = fillTimes(fromJson),
         startTime = formatStart(fromJson['started_at']),
         services = fromJson['services'],
+        boxes = fromJson['boxes'],
+        discount = fromJson['discount'],
+        finalPrice = fromJson['final_price'],
         updates = fromJson['updates'];
 
   static setPlate(String plate) {

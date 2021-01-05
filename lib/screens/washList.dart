@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+//import 'package:provider/provider.dart';
 import 'package:carwash/resources/provider.dart';
 import 'package:carwash/resources/timerStream.dart';
 import 'package:carwash/resources/session.dart';
@@ -26,7 +26,7 @@ Widget washList(BuildContext context, RootProvider prov) {
 //#region duration
     Widget durationWidget;
     List<Widget> durChildrn = [];
-    v.services.forEach((ws) {
+    v.boxes.forEach((ws) {
       Color durClr = Colors.grey;
       if (ws['finished_at'] == null) {
         durClr = Colors.orange;
@@ -49,8 +49,10 @@ Widget washList(BuildContext context, RootProvider prov) {
       }
       durChildrn.add(Icon(Icons.timer, size: 16.0, color: durClr));
       durChildrn.add(SizedBox(width: 3.0));
-      durChildrn.add(Container(width: 52.0, child: durationWidget));
-      durChildrn.add(SizedBox(width: 5.0));
+      durChildrn.add(Container(
+          width: 45.0,
+          child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal, child: durationWidget)));
     });
     Row durationRow = Row(
       children: durChildrn,
@@ -132,7 +134,7 @@ Widget washList(BuildContext context, RootProvider prov) {
     }
 
     Widget price() {
-      return Text('${v.price} c', style: TextStyle(color: moneyClr));
+      return Text('${v.finalPrice} c', style: TextStyle(color: moneyClr));
       /* return Row(
         children: [
           Icon(Icons.attach_money, size: 16.0, color: moneyClr),
@@ -223,6 +225,7 @@ Widget washList(BuildContext context, RootProvider prov) {
       Row(children: [
         Text(v.startTime, style: TextStyle(color: Colors.blue)),
         price(),
+        durationRow,
         Container(
             width: 75.0,
             child: Row(
@@ -230,8 +233,8 @@ Widget washList(BuildContext context, RootProvider prov) {
               mainAxisAlignment: MainAxisAlignment.end,
             )),
       ], mainAxisAlignment: MainAxisAlignment.spaceBetween),
-      SizedBox(height: 2.0),
-      durationRow,
+      /* SizedBox(height: 2.0),
+      durationRow, */
     ];
 
     localist.add(

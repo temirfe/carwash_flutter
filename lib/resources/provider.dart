@@ -17,7 +17,7 @@ class RootProvider with ChangeNotifier {
   int value = 0;
   BuildContext rcontext;
   int navIndex = 0, xPageCount, xTotalCount = 0, xCurrentPage = 0;
-  Map<String, dynamic> washFormMap = {'washers': []},
+  Map<String, dynamic> washFormMap = {'washers': {}, 'services': []},
       subserv2Map = {'washers': []},
       addServMap = {'washers': []};
   Map<int, Wash> washesMap = {};
@@ -25,7 +25,8 @@ class RootProvider with ChangeNotifier {
       washers,
       services,
       activeWashers, //it's List<Map<String, String>>
-      discounts; //List<Map<String, String>>
+      discounts, //List<Map<String, String>>
+      boxes; //List<Map<String, String>>
   List prices; //it's List<Map<String, dynamic>>
   Map<int, String> ctgNameMap = {}, servNameMap = {};
   Map<int, Map> washersMap = {};
@@ -108,7 +109,7 @@ class RootProvider with ChangeNotifier {
   }
 
   void clearFormMap() {
-    washFormMap = {'washers': []};
+    washFormMap = {'washers': {}, 'services': []};
     updateWashers = [];
     cameraImgs = [];
     formPriceShow = null;
@@ -199,6 +200,7 @@ class RootProvider with ChangeNotifier {
       requestPrices();
       requestActiveWashers();
       requestDiscounts();
+      requestBoxes();
     }
 
     /* if (categories == null) {
@@ -304,6 +306,20 @@ class RootProvider with ChangeNotifier {
     }
   }
 
+  Future<void> requestBoxes() async {
+    //int ts = await db.getMaxTimestamp('user');
+    try {
+      Response response = await Dio().get(Endpoints.wash + '/boxes');
+      //cprint('active washers resp: ${response.data}');
+      if (response.data != null && response.data.isNotEmpty) {
+        //await db.import('user', response.data);
+        boxes = response.data;
+      }
+    } on DioError catch (e) {
+      cprint('Error requestBoxes: $e');
+    }
+  }
+
   Future<void> requestDeleteds() async {
     int lastId = await db.getMaxTimestamp('deleted');
     try {
@@ -336,13 +352,13 @@ class RootProvider with ChangeNotifier {
     }
   }
 
-//not used
   void formService(String id, bool add) {
     if (add) {
-      selectedServices.add(id);
+      washFormMap['services'].add(id);
     } else {
-      selectedServices.remove(id);
+      washFormMap['services'].remove(id);
     }
+    setFormPriceShow();
     notifyListeners();
   }
 
@@ -353,15 +369,43 @@ class RootProvider with ChangeNotifier {
   }
 
   void setFormPriceShow() {
+    int thePrice = 0;
     if (washFormMap.containsKey('service_id') &&
         washFormMap.containsKey('category_id')) {
       prices.forEach((priceMap) {
         if (priceMap['service_id'].toString() == washFormMap['service_id'] &&
-            priceMap['category_id'].toString() == washFormMap['category_id']) {
-          formPriceShow = priceMap['price'].toString();
+            (priceMap['category_id'].toString() == washFormMap['category_id'] ||
+                priceMap['category_id'] == null)) {
+          thePrice = priceMap['price'];
           //cprint('setting fp is good $formPriceShow');
         }
       });
+      if (washFormMap['services'].isNotEmpty) {
+        washFormMap['services'].forEach((servIdStr) {
+          prices.forEach((priceMap) {
+            if (priceMap['service_id'].toString() == servIdStr &&
+                (priceMap['category_id'].toString() ==
+                        washFormMap['category_id'] ||
+                    priceMap['category_id'] == null)) {
+              thePrice += priceMap['price'];
+              //cprint('setting fp is good $formPriceShow');
+            }
+          });
+        });
+      }
+      if (washFormMap.containsKey('discount_id')) {
+        discounts.forEach((dmap) {
+          if (dmap['id'] == washFormMap['discount_id']) {
+            int disc = int.parse(dmap['discount']);
+            if (dmap['is_pct'] == '1') {
+              thePrice -= (thePrice * disc / 100).round();
+            } else {
+              thePrice -= disc;
+            }
+          }
+        });
+      }
+      formPriceShow = thePrice.toString();
     }
   }
 
@@ -371,18 +415,18 @@ class RootProvider with ChangeNotifier {
   }
 
 //only one map is actual at once. Just used common method.
-  void formWasher(String id, bool add) {
+  void formWasher(String boxId, String userId, bool add) {
     if (add) {
-      if (!washFormMap.containsKey('washers')) {
-        washFormMap['washers'] = <String>[];
+      if (!washFormMap.containsKey('washers[$boxId]')) {
+        washFormMap['washers[$boxId]'] = <String>[];
       }
-      washFormMap['washers'].add(id);
-      subserv2Map['washers'].add(id);
-      addServMap['washers'].add(id);
+      washFormMap['washers[$boxId]'].add(userId);
+      //subserv2Map['washers'].add(id);
+      //addServMap['washers'].add(id);
     } else {
-      washFormMap['washers'].remove(id);
-      subserv2Map['washers'].remove(id);
-      addServMap['washers'].remove(id);
+      washFormMap['washers[$boxId]'].remove(userId);
+      //subserv2Map['washers'].remove(id);
+      //addServMap['washers'].remove(id);
     }
     /* if (mode == 'insert') {
       if (add) {
@@ -431,15 +475,14 @@ class RootProvider with ChangeNotifier {
         options: Options(headers: {'Authorization': "Bearer $authKey"}),
       );
       List resp = response.data;
-      //cprint('resp: ${response.data}');
       if (resp != null) {
         washers = resp;
-        selectedWashers = [];
+        /* selectedWashers = [];
         washers.forEach((map) {
           if (map['in_service'] == '1') {
             selectedWashers.add(map['id']);
           }
-        });
+        }); */
         notifyListeners();
       }
     } catch (e) {
@@ -579,7 +622,7 @@ class RootProvider with ChangeNotifier {
     requestAllday();
   }
 
-  void requestAllday() async {
+  void requestAlldayDb() async {
     //cprint('requestAllday $showListFromDate');
     List<Map<String, dynamic>> rows = await db.findAllDay(showListFromDate);
     if (rows.isNotEmpty) {
@@ -610,7 +653,7 @@ class RootProvider with ChangeNotifier {
     }
   }
 
-  void requestAlldayServer() async {
+  void requestAllday() async {
     try {
       String authKey = session.getString('authKey');
       Response response = await Dio().get(Endpoints.allday,
@@ -660,8 +703,8 @@ class RootProvider with ChangeNotifier {
     db.deleteOldWashes();
   }
 
-  void formCtg(String id) {
-    washFormMap['category_id'] = id;
+  void formAttr(String attr, String id) {
+    washFormMap[attr] = id;
     setFormPriceShow();
     notifyListeners();
   }
@@ -916,7 +959,7 @@ class RootProvider with ChangeNotifier {
   void populateServices(List src) {
     services = src;
     services.forEach((srvMap) {
-      /* var severId;
+      var severId;
       if (srvMap.containsKey('server_id')) {
         severId = srvMap['server_id'];
       } else {
@@ -925,7 +968,7 @@ class RootProvider with ChangeNotifier {
       if (severId is String) {
         severId = int.parse(severId);
       }
-      servNameMap[severId] = srvMap['title']; */
+      servNameMap[severId] = srvMap['title'];
     });
   }
 
@@ -945,11 +988,11 @@ class RootProvider with ChangeNotifier {
       washersMap[severId] = {
         'id': severId,
         'name': map['username'],
-        'wage': null
+        'wage': null,
       };
-      if (map['in_service'] == 1) {
+      /* if (map['in_service'] == 1) {
         selectedWashers.add(map['server_id'].toString());
-      }
+      } */
     });
   }
 
@@ -1022,10 +1065,10 @@ class RootProvider with ChangeNotifier {
       }
       washFormMap['washers'] = updateWashers;
     } */
-    if (washFormMap['washers'].length == 0) {
+    /* if (washFormMap['washers'].length == 0) {
       washFormError += 'Выберите персонал ';
       good = false;
-    }
+    } */
     if (cameraImgs.isNotEmpty) {
       int i = 0;
       cameraImgs.forEach((path) {
@@ -1076,7 +1119,7 @@ class RootProvider with ChangeNotifier {
           xTotalCount++;
         } else {
           //just append with populating needed data
-          washesMap[response.data['id']] = new Wash.fromJson(dbData);
+          washesMap[response.data['id']] = new Wash.fromJson(response.data);
         }
 
         isSubmitting = false;

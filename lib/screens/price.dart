@@ -47,14 +47,21 @@ class Price extends StatelessWidget {
       });
       serviceList.remove('');
       ctgPriceMap.forEach((ctgName, servPriceMap) {
+        if (ctgName == null) {
+          ctgName = 'Для всех';
+        }
         List<DataCell> priceCells = [
           DataCell(
             Text(ctgName),
           )
         ];
         serviceList.forEach((serv) {
+          String txt = servPriceMap[serv].toString();
+          if (txt == 'null') {
+            txt = '';
+          }
           priceCells.add(DataCell(
-            Text(servPriceMap[serv].toString()),
+            Text(txt),
           ));
         });
         priceRows.add(DataRow(cells: priceCells));
@@ -62,6 +69,9 @@ class Price extends StatelessWidget {
 
       //duration
       ctgDurMap.forEach((ctgName, servDurMap) {
+        if (ctgName == null) {
+          ctgName = 'Для всех';
+        }
         List<DataCell> durCells = [
           DataCell(
             Text(ctgName),
@@ -69,8 +79,12 @@ class Price extends StatelessWidget {
         ];
 
         serviceList.forEach((serv) {
+          String txt = servDurMap[serv].toString();
+          if (txt == 'null') {
+            txt = '';
+          }
           durCells.add(DataCell(
-            Text(servDurMap[serv].toString()),
+            Text(txt),
           ));
         });
         durRows.add(DataRow(cells: durCells));
