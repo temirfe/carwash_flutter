@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:carwash/resources/session.dart';
+import 'package:flutter/material.dart';
 
 class Wash {
   final int id;
@@ -61,7 +62,7 @@ class Wash {
         services = fromJson['services'],
         boxes = fromJson['boxes'],
         discount = fromJson['discount'],
-        finalPrice = fromJson['final_price'],
+        finalPrice = intVal(fromJson['final_price']),
         updates = fromJson['updates'];
 
   static setPlate(String plate) {
@@ -195,10 +196,9 @@ class Wash {
     this.time = timeMap;
   }
 
-  static String timesStr(int start, int finish) {
-    String washDate;
+  static Widget timesWid(int start, int finish, int durStatus) {
     DateTime startTime = new DateTime.fromMillisecondsSinceEpoch(start * 1000);
-    washDate = DateFormat('H:mm').format(startTime);
+    List<Widget> trow = [text16(DateFormat('H:mm').format(startTime))];
 
     if (finish != null) {
       DateTime endTime = new DateTime.fromMillisecondsSinceEpoch(finish * 1000);
@@ -210,11 +210,22 @@ class Wash {
             ' ' +
             DateFormat('H:mm').format(endTime);
       }
+      trow.add(Text(' - '));
+      trow.add(text16(endTimeFormatted));
+      trow.add(SizedBox(width: 5.0));
 
-      washDate +=
-          ' - ' + endTimeFormatted + ' (' + _formatDuration(difference) + ')';
+      String durStr = _formatDuration(difference);
+      Color clr;
+      if (durStatus == 1) {
+        clr = Colors.green;
+      } else if (durStatus == 2) {
+        clr = Colors.red[300];
+      }
+      trow.add(text16('('));
+      trow.add(text16(durStr, clr: clr));
+      trow.add(text16(')'));
     }
-    return washDate;
+    return Row(children: trow);
   }
 
   static String getDate(int ts) {

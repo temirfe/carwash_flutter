@@ -1,6 +1,6 @@
 class Endpoints {
   static final String scheme = "http";
-  //static final String domain = "192.168.88.249:8085";
+  //static final String domain = "192.168.88.227:8085";
   //static final String domain = "192.168.0.108:8085";
   static final String domain = "mayak.ga";
   static final String gmapApi = '';

@@ -171,8 +171,8 @@ class _WashViewState extends State<WashView> {
         list.add(text16(servMap['washers']));
       }
       if (servMap['finished_at'] != null) {
-        list.add(text16(
-            Wash.timesStr(servMap['started_at'], servMap['finished_at'])));
+        /* list.add(text16(
+            Wash.timesStr(servMap['started_at'], servMap['finished_at']))); */
       } else if (servMap['started_at'] != null) {
         hasntFinished = true;
         list.add(startStrBuild(servMap['started_at'], false));
@@ -197,12 +197,11 @@ class _WashViewState extends State<WashView> {
         false; //box2 cannot be started before box1 is finished;
     boxes.forEach((servMap) {
       list.add(text16(servMap['title'], clr: Colors.blue));
-      if (servMap['washers'] != '') {
-        list.add(text16(servMap['washers']));
-      }
       if (servMap['finished_at'] != null) {
-        list.add(text16(
-            Wash.timesStr(servMap['started_at'], servMap['finished_at'])));
+        /* list.add(text16(
+            Wash.timesStr(servMap['started_at'], servMap['finished_at']))); */
+        list.add(Wash.timesWid(servMap['started_at'], servMap['finished_at'],
+            servMap['duration_status']));
       } else if (servMap['started_at'] != null) {
         hasntFinished = true;
         list.add(startStrBuild(servMap['started_at'], false));
@@ -214,6 +213,26 @@ class _WashViewState extends State<WashView> {
           //list = washersSel(list);
           list.add(startBtn(washId, servMap['id']));
         }
+      }
+      if (servMap['washers'] != []) {
+        servMap['washers'].forEach((wm) {
+          List<Widget> wlist = [
+            Container(width: 100.0, child: text16(wm['name']))
+          ];
+          if (wm['wage'] != 0 && wm['wage'] != wm['wage_final']) {
+            wlist.add(SizedBox(width: 5.0));
+            wlist.add(Text(wm['wage'].toString(),
+                style: TextStyle(
+                    color: Colors.red[300],
+                    decoration: TextDecoration.lineThrough)));
+          }
+          if (wm['wage_final'] != null) {
+            wlist.add(SizedBox(width: 5.0));
+            wlist.add(text16(wm['wage_final'].toString()));
+          }
+
+          list.add(Row(children: wlist));
+        });
       }
       list.add(Divider());
     });

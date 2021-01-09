@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carwash/resources/provider.dart';
 import 'package:carwash/resources/session.dart';
+import 'package:carwash/resources/progressDialog.dart';
 
 class Washers extends StatelessWidget {
+  final ProgressDialog pdial = ProgressDialog();
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: AppBar(title: Text('Персонал')), body: body(context));
@@ -34,8 +36,10 @@ class Washers extends StatelessWidget {
               title: new Text(prov.washers[i]['username']),
               controlAffinity: ListTileControlAffinity.leading,
               value: washerBool,
-              onChanged: (bool isTicked) {
-                prov.changeWasherStatus(prov.washers[i]['id'], isTicked);
+              onChanged: (bool isTicked) async {
+                pdial.show(context);
+                await prov.changeWasherStatus(prov.washers[i]['id'], isTicked);
+                pdial.hide();
               },
             ),
           ),

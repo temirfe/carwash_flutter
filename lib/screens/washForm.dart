@@ -11,6 +11,7 @@ import 'package:carwash/resources/washModel.dart';
 //import 'washView.dart';
 import 'package:carwash/resources/session.dart';
 import 'package:carwash/resources/endpoints.dart';
+import 'package:carwash/widgets/washersBoxDialog.dart';
 
 class WashForm extends StatefulWidget {
   final int id;
@@ -46,6 +47,9 @@ class _WashFormState extends State<WashForm> {
     plateFocus = FocusNode();
     phoneFocus = FocusNode();
     markaFocus = FocusNode();
+    if (!prov.washFormMap.containsKey('washers')) {
+      prov.washFormMap['washers'] = {};
+    }
 
     if (widget.id != null) {
       mode = 'update';
@@ -59,6 +63,11 @@ class _WashFormState extends State<WashForm> {
       appBarTitle = 'Мойка ID $id ред.';
       prov.washFormMap['category_id'] = wash.categoryId.toString();
       prov.washFormMap['service_id'] = wash.serviceId.toString();
+      prov.servbox.forEach((sbm) {
+        if (sbm['service_id'] == wash.serviceId.toString()) {
+          prov.mainServBox.add(sbm['box_id']);
+        }
+      });
       //cprint('washForm washerIds ${wash.washerIds}');
       prov.updateWashers = wash.washerIds;
       prov.washFormMap['id'] = id;
@@ -72,25 +81,37 @@ class _WashFormState extends State<WashForm> {
       //prov.washFormMap['plate'] = wash.plate;
 
       int currentTS = (DateTime.now().millisecondsSinceEpoch / 1000).round();
-      double passedMinutes = (currentTS - wash.startedAt) / 60;
-      if (passedMinutes > 360) {
-        canEdit = false; //can edit only withing 6 hours after start
+      int startOrFinish = 0;
+      if (wash.finishedAt != null) {
+        startOrFinish = wash.finishedAt;
+      } else {
+        startOrFinish = wash.startedAt;
+      }
+      double passedMinutes = (currentTS - startOrFinish) / 60;
+      if (passedMinutes > 180) {
+        canEdit = false; //can edit only withing 3 hours after finish (or start)
         //cprint('passed $passedMinutes, cur $currentTS, start ${wash.startedAt}');
       } else {
         cprint('can edit');
       }
       wash.services.forEach((sMap) {
         prov.washFormMap['services'].add(sMap['service_id'].toString());
+        prov.servbox.forEach((sbm) {
+          if (sbm['service_id'] == sMap['service_id'].toString()) {
+            prov.extraServBox.add(sbm['box_id']);
+          }
+        });
       });
       wash.boxes.forEach((boxMap) {
-        prov.washFormMap['washers[${boxMap['box_id']}]'] = boxMap['washer_ids'];
+        prov.washFormMap['washers'][boxMap['box_id'].toString()] =
+            boxMap['washer_ids'];
       });
     } else {
       prov.activeWashers.forEach((am) {
-        if (!prov.washFormMap.containsKey('washers[${am['box_id']}]')) {
-          prov.washFormMap['washers[${am['box_id']}]'] = <String>[];
+        if (!prov.washFormMap['washers'].containsKey(am['box_id'])) {
+          prov.washFormMap['washers'][am['box_id']] = <String>[];
         }
-        prov.washFormMap['washers[${am['box_id']}]'].add(am['user_id']);
+        prov.washFormMap['washers'][am['box_id']].add(am['user_id']);
       });
     }
   }
@@ -243,7 +264,7 @@ class _WashFormState extends State<WashForm> {
   }
 
   Widget serviceRadioList(BuildContext context, RootProvider prov) {
-    cprint('washFormMap ${prov.washFormMap}');
+    //cprint('washFormMap ${prov.washFormMap}');
     String inival;
     if (prov.washFormMap.containsKey('service_id')) {
       inival = prov.washFormMap['service_id'];
@@ -286,9 +307,11 @@ class _WashFormState extends State<WashForm> {
     prov.services.forEach((servMap) {
       if (servMap['only_secondary'] == '1' ||
           servMap['can_be_secondary'] == '1') {
-        var servChange = (bool value) {
-          prov.formService(servMap['id'], value);
-        };
+        var servChange = canEdit
+            ? (bool value) {
+                prov.formService(servMap['id'], value);
+              }
+            : null;
         widList.add(
           ListTileTheme(
             contentPadding: EdgeInsets.all(0),
@@ -411,42 +434,7 @@ class _WashFormState extends State<WashForm> {
         //showPrice(prov)
       ];
 
-//#region Photos
-      List<Widget> photosList = [];
-      if (wash != null && wash.photo != null) {
-        var photos = wash.photo.split(';');
-        photos.forEach((path) {
-          photosList.add(CachedNetworkImage(
-              imageUrl: Endpoints.baseUrl + path, fit: BoxFit.fitHeight));
-          photosList.add(SizedBox(width: 3.0));
-        });
-      }
-      if (wash != null && wash.photoLocal != null) {
-        var photos = wash.photoLocal.split(';');
-        photos.forEach((path) {
-          photosList.add(Image.file(File(path), fit: BoxFit.fitHeight));
-          photosList.add(SizedBox(width: 3.0));
-        });
-      }
-      if (prov.cameraImgs.isNotEmpty) {
-        prov.cameraImgs.forEach((path) {
-          photosList.add(Image.file(File(path), fit: BoxFit.fitHeight));
-          photosList.add(SizedBox(width: 3.0));
-        });
-      }
-
-      if (photosList.isNotEmpty) {
-        widList.add(
-          Container(
-            child: Row(children: photosList),
-            height: 100.0,
-          ),
-        );
-        widList.add(SizedBox(
-          height: 6.0,
-        ));
-      }
-//#endregion
+      widList = photoList(widList);
 
       widList.add(RaisedButton.icon(
         icon: Icon(Icons.camera_alt),
@@ -480,40 +468,7 @@ class _WashFormState extends State<WashForm> {
         padding: EdgeInsets.only(top: 16.0),
       ));
       widList.add(discRadioList(context, prov));
-
-      prov.boxes.forEach((box) {
-        widList.add(Container(
-          child: Text(box['title'], style: TextStyle(color: Colors.blue)),
-          padding: EdgeInsets.only(top: 16.0),
-        ));
-
-        prov.washers.forEach((map) {
-          if (map['in_service'] == '1') {
-            bool washerBool = false;
-            if (prov.washFormMap.containsKey('washers[${box['id']}]') &&
-                prov.washFormMap['washers[${box['id']}]'].contains(map['id'])) {
-              washerBool = true;
-            }
-            widList.add(
-              ListTileTheme(
-                contentPadding: EdgeInsets.all(0),
-                child: CheckboxListTile(
-                  dense: true,
-                  title: new Text(map['username']),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: washerBool,
-                  onChanged: canEdit
-                      ? (bool value) {
-                          prov.formWasher(box['id'], map['id'], value);
-                        }
-                      : null,
-                ),
-              ),
-            );
-          }
-        });
-      });
-
+      widList = washersSel(widList);
       widList.add(TextField(
         decoration: InputDecoration(labelText: 'Коммент'),
         controller: _commentTC,
@@ -567,6 +522,112 @@ class _WashFormState extends State<WashForm> {
         padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       );
     });
+  }
+
+  List<Widget> photoList(List<Widget> widList) {
+    List<Widget> photosList = [];
+    if (wash != null && wash.photo != null) {
+      var photos = wash.photo.split(';');
+      photos.forEach((path) {
+        photosList.add(CachedNetworkImage(
+            imageUrl: Endpoints.baseUrl + path, fit: BoxFit.fitHeight));
+        photosList.add(SizedBox(width: 3.0));
+      });
+    }
+    if (wash != null && wash.photoLocal != null) {
+      var photos = wash.photoLocal.split(';');
+      photos.forEach((path) {
+        photosList.add(Image.file(File(path), fit: BoxFit.fitHeight));
+        photosList.add(SizedBox(width: 3.0));
+      });
+    }
+    if (prov.cameraImgs.isNotEmpty) {
+      prov.cameraImgs.forEach((path) {
+        photosList.add(Image.file(File(path), fit: BoxFit.fitHeight));
+        photosList.add(SizedBox(width: 3.0));
+      });
+    }
+
+    if (photosList.isNotEmpty) {
+      widList.add(
+        Container(
+          child: Row(children: photosList),
+          height: 100.0,
+        ),
+      );
+      widList.add(SizedBox(
+        height: 6.0,
+      ));
+    }
+    return widList;
+  }
+
+  List<Widget> washersSel(List<Widget> widList) {
+    //cprint('washersSel prov.washFormMap ${prov.washFormMap}');
+    widList.add(Container(
+      child: Text('Персонал', style: TextStyle(color: Colors.blue)),
+      padding: EdgeInsets.only(top: 16.0),
+    ));
+    prov.boxes.forEach((box) {
+      List<String> subtitle = [];
+
+      if (prov.washFormMap.containsKey('washers') &&
+          prov.washFormMap['washers'].containsKey(box['id'])) {
+        prov.washFormMap['washers'][box['id']].forEach((userId) {
+          if (prov.washersMap.containsKey(int.parse(userId))) {
+            subtitle.add(prov.washersMap[int.parse(userId)]['name']);
+          }
+        });
+      }
+
+      if (prov.mainServBox.contains(box['id']) ||
+          prov.extraServBox.contains(box['id'])) {
+        widList.add(ListTile(
+          title: Text(box['title']),
+          dense: true,
+          subtitle: Text(subtitle.join(', ')),
+          trailing: Icon(Icons.keyboard_arrow_right),
+          onTap: canEdit
+              ? () {
+                  washersBoxDialog(context, box);
+                }
+              : null,
+        ));
+      }
+
+      /*  widList.add(Container(
+        child: Text(box['title'], style: TextStyle(color: Colors.blue)),
+        padding: EdgeInsets.only(top: 16.0),
+      ));
+
+      prov.washers.forEach((map) {
+        if (map['in_service'] == '1') {
+          bool washerBool = false;
+          if (prov.washFormMap.containsKey('washers') &&
+              prov.washFormMap['washers'].containsKey(box['id']) &&
+              prov.washFormMap['washers'][box['id']].contains(map['id'])) {
+            washerBool = true;
+          }
+          widList.add(
+            ListTileTheme(
+              contentPadding: EdgeInsets.all(0),
+              child: CheckboxListTile(
+                dense: true,
+                title: new Text(map['username']),
+                controlAffinity: ListTileControlAffinity.leading,
+                value: washerBool,
+                onChanged: canEdit
+                    ? (bool value) {
+                        prov.formWasher(box['id'], map['id'], value);
+                      }
+                    : null,
+              ),
+            ),
+          );
+        }
+      }); */
+    });
+    return widList;
   }
 }
 

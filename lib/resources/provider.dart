@@ -17,7 +17,7 @@ class RootProvider with ChangeNotifier {
   int value = 0;
   BuildContext rcontext;
   int navIndex = 0, xPageCount, xTotalCount = 0, xCurrentPage = 0;
-  Map<String, dynamic> washFormMap = {'washers': {}, 'services': []},
+  Map<String, dynamic> washFormMap = {'services': []},
       subserv2Map = {'washers': []},
       addServMap = {'washers': []};
   Map<int, Wash> washesMap = {};
@@ -26,6 +26,7 @@ class RootProvider with ChangeNotifier {
       services,
       activeWashers, //it's List<Map<String, String>>
       discounts, //List<Map<String, String>>
+      servbox, //List<Map<String, String>>
       boxes; //List<Map<String, String>>
   List prices; //it's List<Map<String, dynamic>>
   Map<int, String> ctgNameMap = {}, servNameMap = {};
@@ -109,7 +110,7 @@ class RootProvider with ChangeNotifier {
   }
 
   void clearFormMap() {
-    washFormMap = {'washers': {}, 'services': []};
+    washFormMap = {'services': []};
     updateWashers = [];
     cameraImgs = [];
     formPriceShow = null;
@@ -120,6 +121,7 @@ class RootProvider with ChangeNotifier {
     //String authKey = session.getString('authKey');
     try {
       isLoading = true;
+      fabVisible = false;
       //cprint('showListFromDate $showListFromDate');
       Response response = await Dio().get(Endpoints.washes, queryParameters: {
         'page': (xCurrentPage + 1),
@@ -146,6 +148,7 @@ class RootProvider with ChangeNotifier {
         });
       }
       isLoading = false;
+      fabVisible = true;
       notifyListeners();
     } on DioError catch (e) {
       cprint('Error requestList: $e');
@@ -201,6 +204,7 @@ class RootProvider with ChangeNotifier {
       requestActiveWashers();
       requestDiscounts();
       requestBoxes();
+      requestServiceBoxes();
     }
 
     /* if (categories == null) {
@@ -233,6 +237,18 @@ class RootProvider with ChangeNotifier {
       //notifyListeners();
     } on DioError catch (e) {
       cprint('Error requestServices: $e');
+    }
+  }
+
+  Future<void> requestServiceBoxes() async {
+    try {
+      Response response = await Dio().get(
+        Endpoints.wash + '/servbox',
+      );
+      servbox = response.data;
+      //cprint('servbox resp: ${response.data}');
+    } on DioError catch (e) {
+      cprint('Error requestServiceBoxes: $e');
     }
   }
 
@@ -358,14 +374,38 @@ class RootProvider with ChangeNotifier {
     } else {
       washFormMap['services'].remove(id);
     }
+    washerBoxShow(id, add, false);
     setFormPriceShow();
     notifyListeners();
   }
 
   void formService2(String id) {
     washFormMap['service_id'] = id;
+    washerBoxShow(id, true, true);
     setFormPriceShow();
     notifyListeners();
+  }
+
+//add selected services box ids
+  List<String> mainServBox = [];
+  List<String> extraServBox = [];
+  void washerBoxShow(String serviceId, bool add, bool isMain) {
+    if (isMain) {
+      mainServBox = [];
+    }
+    servbox.forEach((sbm) {
+      if (sbm['service_id'] == serviceId) {
+        if (isMain) {
+          mainServBox.add(sbm['box_id']);
+        } else {
+          if (add) {
+            extraServBox.add(sbm['box_id']);
+          } else {
+            extraServBox.remove(sbm['box_id']);
+          }
+        }
+      }
+    });
   }
 
   void setFormPriceShow() {
@@ -417,14 +457,16 @@ class RootProvider with ChangeNotifier {
 //only one map is actual at once. Just used common method.
   void formWasher(String boxId, String userId, bool add) {
     if (add) {
-      if (!washFormMap.containsKey('washers[$boxId]')) {
-        washFormMap['washers[$boxId]'] = <String>[];
+      if (!washFormMap.containsKey('washers') ||
+          !washFormMap['washers'].containsKey(boxId)) {
+        washFormMap['washers'] = {};
+        washFormMap['washers'][boxId] = <String>[];
       }
-      washFormMap['washers[$boxId]'].add(userId);
+      washFormMap['washers'][boxId].add(userId);
       //subserv2Map['washers'].add(id);
       //addServMap['washers'].add(id);
     } else {
-      washFormMap['washers[$boxId]'].remove(userId);
+      washFormMap['washers'][boxId].remove(userId);
       //subserv2Map['washers'].remove(id);
       //addServMap['washers'].remove(id);
     }
@@ -466,7 +508,7 @@ class RootProvider with ChangeNotifier {
     }
   }
 
-  void changeWasherStatus(String id, bool value) async {
+  Future<bool> changeWasherStatus(String id, bool value) async {
     try {
       String authKey = session.getString('authKey');
       Response response = await Dio().post(
@@ -488,6 +530,7 @@ class RootProvider with ChangeNotifier {
     } catch (e) {
       print(e);
     }
+    return true;
   }
 
   void finishWash(Wash wash) async {
@@ -600,7 +643,8 @@ class RootProvider with ChangeNotifier {
       sinkMap({'paid': false});
       // cprint('resp: ${response.data}');
       if (response.data) {
-        washesMap[id].setPaid = 1;
+        //washesMap[id].setPaid = 1;
+        requestWash(id);
         notifyListeners();
       }
     } catch (e) {
@@ -1034,6 +1078,36 @@ class RootProvider with ChangeNotifier {
     }
   }
 
+  bool washersValidate(bool good) {
+    List<String> boxWashersNotFilled = [];
+    if (mainServBox.isNotEmpty) {
+      mainServBox.forEach((String boxId) {
+        if (!washFormMap['washers'].containsKey(boxId) ||
+            washFormMap['washers'][boxId].isEmpty) {
+          boxWashersNotFilled.add(boxId);
+        }
+      });
+    }
+    if (extraServBox.isNotEmpty) {
+      extraServBox.forEach((String boxId) {
+        if (!washFormMap['washers'].containsKey(boxId) ||
+            washFormMap['washers'][boxId].isEmpty) {
+          boxWashersNotFilled.add(boxId);
+        }
+      });
+    }
+    //cprint('boxWashersNotFilled $boxWashersNotFilled');
+    if (boxWashersNotFilled.isNotEmpty) {
+      boxWashersNotFilled = boxWashersNotFilled.toSet().toList();
+      //cprint('box $boxWashersNotFilled users not filled');
+      boxWashersNotFilled.forEach((String boxId) {
+        washFormError += 'Выберите персонал для бокса $boxId\n';
+      });
+      good = false;
+    }
+    return good;
+  }
+
   Future<int> submit(String mode) async {
     bool good = true;
     washFormError = "";
@@ -1046,6 +1120,7 @@ class RootProvider with ChangeNotifier {
       washFormError += 'Выберите услугу \n';
       good = false;
     }
+    good = washersValidate(good);
     /* if (selectedServices.length > 0) {
       for (int i = 0; i < selectedServices.length; i++) {
         washFormMap['services[$i]'] = selectedServices[i];
@@ -1128,6 +1203,7 @@ class RootProvider with ChangeNotifier {
         clearFormMap();
         //selectedServices = [];
         notifyListeners();
+        requestActiveWashers();
         return response.data['id'];
       } on DioError catch (e) {
         cprint('Error message: $e');

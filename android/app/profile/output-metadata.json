@@ -1,19 +1,17 @@
 {
-  "version": 1,
+  "version": 2,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
   },
   "applicationId": "kg.prosoft.carwash",
-  "variantName": "profile",
+  "variantName": "processProfileResources",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
-      "properties": [],
-      "versionCode": 8,
-      "versionName": "1.0.8",
-      "enabled": true,
+      "versionCode": 1,
+      "versionName": "1.3.0",
       "outputFile": "app-profile.apk"
     }
   ]

@@ -189,8 +189,8 @@ class _WashViewState extends State<WashView> {
         list.add(text16(servMap['washers']));
       }
       if (servMap['finished_at'] != null) {
-        list.add(text16(
-            Wash.timesStr(servMap['started_at'], servMap['finished_at'])));
+        /* list.add(text16(
+            Wash.timesStr(servMap['started_at'], servMap['finished_at']))); */
       } else if (servMap['started_at'] != null) {
         hasntFinished = true;
         list.add(startStrBuild(servMap['started_at'], false));

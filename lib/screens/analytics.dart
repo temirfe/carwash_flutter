@@ -25,8 +25,8 @@ Widget analytics(BuildContext context, RootProvider prov) {
         totalPricePaid += map['final_price'];
       }
       map['boxes'].forEach((bmap) {
-        bmap['washers2'].forEach((wmap) {
-          int wage = wmap['wage'] == null ? 0 : wmap['wage'];
+        bmap['washers'].forEach((wmap) {
+          int wage = wmap['wage_final'] == null ? 0 : wmap['wage_final'];
           if (washers.containsKey(wmap['id'])) {
             washers[wmap['id']]['wage'] += wage;
           } else {
