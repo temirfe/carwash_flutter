@@ -3,6 +3,9 @@ import 'package:carwash/resources/provider.dart';
 import 'package:carwash/resources/session.dart';
 
 Widget settings(BuildContext context, RootProvider prov) {
+  if (prov.errorMessage != '') {
+    return Text(prov.errorMessage);
+  }
   return ListView(
     children: [
       ListTile(

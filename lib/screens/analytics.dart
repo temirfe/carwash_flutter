@@ -3,6 +3,9 @@ import 'package:carwash/resources/provider.dart';
 //import 'package:carwash/resources/session.dart';
 
 Widget analytics(BuildContext context, RootProvider prov) {
+  if (prov.errorMessage != '') {
+    return Text(prov.errorMessage);
+  }
   if (prov.analyticsList == null || prov.analyticsList.isEmpty) {
     return Text('Нет данных');
   } else {

@@ -33,6 +33,7 @@ class RootProvider with ChangeNotifier {
   Map<int, Map> washersMap = {};
   final DatabaseHelper db = DatabaseHelper();
   StreamController<Map> mapStrmCtrl = StreamController<Map>.broadcast();
+  String errorMessage = '';
 
   /*
    * selectedWashers is used in create, washes who are 'in_service' will be populated and will be preselected
@@ -54,7 +55,7 @@ class RootProvider with ChangeNotifier {
   String queryPlate = "";
 
   void closeStreams() {
-    db.closeDb();
+    //db.closeDb();
     mapStrmCtrl.close();
   }
 
@@ -118,18 +119,21 @@ class RootProvider with ChangeNotifier {
 
   void requestList() async {
     //cprint('requestList');
-    //String authKey = session.getString('authKey');
+    errorMessage = '';
+    String authKey = session.getString('authKey');
     try {
       isLoading = true;
       fabVisible = false;
       //cprint('showListFromDate $showListFromDate');
-      Response response = await Dio().get(Endpoints.washes, queryParameters: {
-        'page': (xCurrentPage + 1),
-        'date': showListFromDate,
-        'plate': queryPlate
-      }
-          //options: Options(headers: {'Authorization': "Bearer $authKey"}),
-          );
+      Response response = await Dio().get(
+        Endpoints.washes,
+        queryParameters: {
+          'page': (xCurrentPage + 1),
+          'date': showListFromDate,
+          'plate': queryPlate
+        },
+        options: Options(headers: {'Authorization': "Bearer $authKey"}),
+      );
       response.headers.forEach((name, values) {
         if (name == 'x-pagination-page-count') {
           xPageCount = int.parse(values[0]);
@@ -140,6 +144,7 @@ class RootProvider with ChangeNotifier {
         }
       });
       //cprint('xpages count:$xPageCount, current: $xCurrentPage');
+      cprint('requestList ${response.headers}');
       if (response.data.isEmpty) {
         washesMap = {};
       } else {
@@ -151,7 +156,7 @@ class RootProvider with ChangeNotifier {
       fabVisible = true;
       notifyListeners();
     } on DioError catch (e) {
-      cprint('Error requestList: $e');
+      theErr(e);
     }
   }
 
@@ -612,9 +617,11 @@ class RootProvider with ChangeNotifier {
   }
 
   void startSecond(int washId, int washServiceId) async {
+    String authKey = session.getString('authKey');
     sinkMap({'second': true});
     try {
       Response response = await Dio().post(Endpoints.wash + '/start',
+          options: Options(headers: {'Authorization': "Bearer $authKey"}),
           data: {'id': washServiceId, 'washers': subserv2Map['washers']});
       var resp = response.data;
       cprint('startSecond $resp');
@@ -699,6 +706,7 @@ class RootProvider with ChangeNotifier {
 
   void requestAllday() async {
     try {
+      errorMessage = '';
       String authKey = session.getString('authKey');
       Response response = await Dio().get(Endpoints.allday,
           queryParameters: {'date': showListFromDate},
@@ -707,7 +715,21 @@ class RootProvider with ChangeNotifier {
       notifyListeners();
       //cprint('resp: $response.data');
     } catch (e) {
-      print(e);
+      theErr(e);
+    }
+  }
+
+  void theErr(DioError e) {
+    if (e.response.statusCode == 403) {
+      String msg = 'У вас недостаточно прав';
+
+      if (e.response.data.containsKey('message')) {
+        msg = e.response.data['message'];
+      }
+      isLoading = false;
+      fabVisible = false;
+      errorMessage = msg;
+      notifyListeners();
     }
   }
 

@@ -198,7 +198,7 @@ Widget washList(BuildContext context, RootProvider prov) {
 
     Widget ctg() {
       return Container(
-          width: 170.0,
+          width: 120.0,
           margin: EdgeInsets.only(right: 10.0),
           child: Text('${v.category}',
               overflow: TextOverflow.ellipsis,
@@ -206,13 +206,20 @@ Widget washList(BuildContext context, RootProvider prov) {
     }
 
     Widget service() {
+      List<String> titles = [v.service];
+      if (v.services.isNotEmpty) {
+        v.services.forEach((sm) {
+          titles.add(sm['title']);
+        });
+      }
       return Expanded(
+          child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: Container(
-          child: Text('${v.service}',
-              overflow: TextOverflow.ellipsis,
+          child: Text('${titles.join(', ')}',
               style: TextStyle(color: Colors.black54)),
         ),
-      );
+      ));
     }
 
     List<Widget> titleChildren = [
@@ -289,6 +296,9 @@ Widget washList(BuildContext context, RootProvider prov) {
 
   if (prov.isLoading) {
     return Center(child: CircularProgressIndicator());
+  }
+  if (prov.errorMessage != '') {
+    return Center(child: Text(prov.errorMessage));
   }
   if (prov.washesMap.isEmpty) {
     return Center(

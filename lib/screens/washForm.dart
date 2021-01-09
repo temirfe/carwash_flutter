@@ -135,7 +135,6 @@ class _WashFormState extends State<WashForm> {
       WidgetsBinding.instance
           .addPostFrameCallback((_) => plateFocus.requestFocus());
     }
-
     return myScaffold(context, widget.id);
   }
 
@@ -377,6 +376,9 @@ class _WashFormState extends State<WashForm> {
   }
 
   Widget theForm(BuildContext context, int id) {
+    if (prov.errorMessage != '') {
+      return Text(prov.errorMessage);
+    }
     return Consumer<RootProvider>(builder: (context, prov, child) {
       if (prov.categories == null ||
           prov.services == null ||
