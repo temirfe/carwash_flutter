@@ -115,6 +115,7 @@ class RootProvider with ChangeNotifier {
     updateWashers = [];
     cameraImgs = [];
     formPriceShow = null;
+    activeWashers = null;
   }
 
   void requestList() async {
@@ -144,7 +145,8 @@ class RootProvider with ChangeNotifier {
         }
       });
       //cprint('xpages count:$xPageCount, current: $xCurrentPage');
-      cprint('requestList ${response.headers}');
+      //cprint('requestList: ${response.data}');
+      //cprint('requestList ${response.headers}');
       if (response.data.isEmpty) {
         washesMap = {};
       } else {
@@ -156,6 +158,7 @@ class RootProvider with ChangeNotifier {
       fabVisible = true;
       notifyListeners();
     } on DioError catch (e) {
+      print(e);
       theErr(e);
     }
   }
@@ -206,7 +209,6 @@ class RootProvider with ChangeNotifier {
       requestServices();
       requestWashers();
       requestPrices();
-      requestActiveWashers();
       requestDiscounts();
       requestBoxes();
       requestServiceBoxes();
@@ -307,6 +309,7 @@ class RootProvider with ChangeNotifier {
       if (response.data != null && response.data.isNotEmpty) {
         //await db.import('user', response.data);
         activeWashers = response.data;
+        notifyListeners();
       }
     } on DioError catch (e) {
       cprint('Error requestActiveWashers: $e');
@@ -1225,7 +1228,6 @@ class RootProvider with ChangeNotifier {
         clearFormMap();
         //selectedServices = [];
         notifyListeners();
-        requestActiveWashers();
         return response.data['id'];
       } on DioError catch (e) {
         cprint('Error message: $e');

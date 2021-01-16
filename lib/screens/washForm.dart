@@ -43,6 +43,8 @@ class _WashFormState extends State<WashForm> {
     super.initState();
     prov = Provider.of<RootProvider>(context, listen: false);
     prov.clearFormMap();
+    prov.formRequests();
+    prov.requestActiveWashers();
     //prov.populateFromDb(true);
     plateFocus = FocusNode();
     phoneFocus = FocusNode();
@@ -106,8 +108,15 @@ class _WashFormState extends State<WashForm> {
         prov.washFormMap['washers'][boxMap['box_id'].toString()] =
             boxMap['washer_ids'];
       });
-    } else {
+    }
+  }
+
+  void activeWashers() {
+    if (widget.id == null &&
+        prov.activeWashers != null &&
+        prov.washFormMap['washers'].isEmpty) {
       prov.activeWashers.forEach((am) {
+        cprint('add active washer id ${am['user_id']}');
         if (!prov.washFormMap['washers'].containsKey(am['box_id'])) {
           prov.washFormMap['washers'][am['box_id']] = <String>[];
         }
@@ -130,6 +139,7 @@ class _WashFormState extends State<WashForm> {
   }
 
   Widget build(BuildContext context) {
+    cprint('washForm build');
     if (id == null) {
       //executed once after build is complete, only in create mode
       WidgetsBinding.instance
@@ -388,6 +398,8 @@ class _WashFormState extends State<WashForm> {
           child: CircularProgressIndicator(),
         );
       }
+
+      activeWashers();
       List<Widget> widList = [
         TextField(
           //autofocus: true,

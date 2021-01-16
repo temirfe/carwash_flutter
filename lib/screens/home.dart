@@ -14,6 +14,7 @@ import 'washList.dart';
 import 'analytics.dart';
 import 'settings.dart';
 import 'package:intl/intl.dart';
+import 'package:ansicolor/ansicolor.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -39,7 +40,7 @@ class _HomePageState extends State<HomePage> {
 
     //syncWithServer();
 
-    //cprint('home init');
+    cprint('home init');
     final DateTime now = DateTime.now();
     final DateTime yesterdayDT = new DateTime(now.year, now.month, now.day - 1);
     final DateTime beforeYesterdayDT =

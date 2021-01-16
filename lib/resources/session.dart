@@ -11,6 +11,7 @@ sessionSaveAuth(Map<String, dynamic> map) {
 }
 
 cprint(String msg) {
+  ansiColorDisabled = false;
   AnsiPen pen = new AnsiPen()
     ..white()
     ..rgb(r: 1.0, g: 0.8, b: 0.2);
