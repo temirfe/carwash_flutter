@@ -172,11 +172,14 @@ class _AddServiceState extends State<AddService> {
               child: CircularProgressIndicator(
                   valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
         }
-        return FlatButton(
+        return ElevatedButton(
           child: btnChild,
-          padding: EdgeInsets.symmetric(vertical: 6.0),
-          color: Colors.green,
-          disabledColor: Colors.grey,
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            padding: EdgeInsets.symmetric(vertical: 6.0),
+            backgroundColor: Colors.green,
+            disabledBackgroundColor: Colors.grey,
+          ),
           onPressed: onPres,
         );
       },

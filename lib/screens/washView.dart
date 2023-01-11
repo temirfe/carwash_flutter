@@ -254,11 +254,13 @@ class _WashViewState extends State<WashView> {
               child: CircularProgressIndicator(
                   valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
         }
-        return RaisedButton(
+        return ElevatedButton(
           onPressed: () {
             prov.startSecond(washId, wsId);
           },
-          color: Colors.green,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+          ),
           child: btnChild,
         );
       },
@@ -279,12 +281,14 @@ class _WashViewState extends State<WashView> {
               child: CircularProgressIndicator(
                   valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
         }
-        return RaisedButton(
+        return ElevatedButton(
           onPressed: () {
             prov.requestPaid(washId);
             //prov.washPaid(wash);
           },
-          color: Colors.blue[300],
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue[300],
+          ),
           child: btnChild,
         );
       },
@@ -305,11 +309,13 @@ class _WashViewState extends State<WashView> {
               child: CircularProgressIndicator(
                   valueColor: new AlwaysStoppedAnimation<Color>(Colors.white)));
         }
-        return RaisedButton(
+        return ElevatedButton(
           onPressed: () {
             prov.requestFinish(washId, washServiceId);
           },
-          color: Colors.green,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+          ),
           child: btnChild,
         );
       },

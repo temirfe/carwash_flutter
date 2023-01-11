@@ -9,15 +9,15 @@ Widget navbar(RootProvider prov) {
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
-          title: Text('Главная'),
+          label: 'Главная',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.assessment),
-          title: Text('Учёт'),
+          label: 'Учёт',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.settings),
-          title: Text('Настройки'),
+          label: 'Настройки',
         ),
       ],
       currentIndex: prov.navIndex,

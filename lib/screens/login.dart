@@ -170,10 +170,13 @@ class _LoginScreenPage extends State<LoginPage> {
     }
 
     return SizedBox(
-      child: RaisedButton(
-          onPressed: onPresd,
-          child: contnt,
-          color: Theme.of(context).primaryColor),
+      child: ElevatedButton(
+        onPressed: onPresd,
+        child: contnt,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).primaryColor,
+        ),
+      ),
       height: 40.0,
       width: 200.0,
     );

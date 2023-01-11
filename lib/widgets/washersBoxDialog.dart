@@ -96,7 +96,7 @@ washersBoxDialog(BuildContext context, Map box) {
                     ),
                     width: MediaQuery.of(context).size.width - 20,
                     child: Align(
-                      child: FlatButton(
+                      child: TextButton(
                         //////////////
                         onPressed: () {
                           Navigator.of(context).pop();

@@ -68,31 +68,34 @@ Widget stopwatch() {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      RaisedButton(
+                      ElevatedButton(
                         onPressed: stopBtnDisabled ? null : stopSW,
-                        color: Colors.red,
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 40.0, vertical: 15.0),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 40.0, vertical: 15.0)),
                         child: Text('Stop',
                             style:
                                 TextStyle(fontSize: 20.0, color: Colors.white)),
                       ),
-                      RaisedButton(
+                      ElevatedButton(
                         onPressed: resetBtnDisabled ? null : resetSW,
-                        color: Colors.teal,
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 40.0, vertical: 15.0),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 40.0, vertical: 15.0)),
                         child: Text('Reset',
                             style:
                                 TextStyle(fontSize: 20.0, color: Colors.white)),
                       ),
                     ],
                   ),
-                  RaisedButton(
+                  ElevatedButton(
                     onPressed: startBtnEnabled ? startSW : null,
-                    color: Colors.green,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 80.0, vertical: 20.0),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 80.0, vertical: 20.0)),
                     child: Text('Start',
                         style: TextStyle(fontSize: 24.0, color: Colors.white)),
                   ),

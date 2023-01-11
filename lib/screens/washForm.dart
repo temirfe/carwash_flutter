@@ -450,7 +450,7 @@ class _WashFormState extends State<WashForm> {
 
       widList = photoList(widList);
 
-      widList.add(RaisedButton.icon(
+      widList.add(ElevatedButton.icon(
         icon: Icon(Icons.camera_alt),
         label: Text('Камера'),
         onPressed: () {
@@ -507,10 +507,11 @@ class _WashFormState extends State<WashForm> {
             .add(Text(prov.washFormError, style: TextStyle(color: Colors.red)));
       }
 
-      widList.add(FlatButton(
+      widList.add(TextButton(
         child: btnContent,
-        padding: EdgeInsets.symmetric(vertical: 6.0),
-        color: Colors.green,
+        style: TextButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: EdgeInsets.symmetric(vertical: 6.0)),
         onPressed: () {
           Future<int> subm = prov.submit(mode);
           subm.then((id) {

@@ -30,12 +30,12 @@ class _TestPageState extends State<TestPage> {
     return Scaffold(
       appBar: AppBar(title: Text('test')),
       body: ListView(children: [
-        RaisedButton(
+        ElevatedButton(
             child: Text('export wash'),
             onPressed: () async {
               prov.exportWash();
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('oldvals'),
             onPressed: () async {
               List<Map<String, dynamic>> oldVals = await db.findAll('wash',
@@ -43,7 +43,7 @@ class _TestPageState extends State<TestPage> {
                   fields: 'category_id,plate,service_id,phone,marka');
               // cprint('oldVals ${oldVals[0]}');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read ctg'),
             onPressed: () async {
               var result = await db.findAll('category');
@@ -53,7 +53,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('category result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read service'),
             onPressed: () async {
               var result = await db.findAll('service');
@@ -63,7 +63,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('service result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read user'),
             onPressed: () async {
               var result = await db.findAll('user');
@@ -73,7 +73,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('user result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read price'),
             onPressed: () async {
               var result = await db.findAll('price');
@@ -83,7 +83,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('price result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read test'),
             onPressed: () async {
               var result = await db.findAll('test');
@@ -93,7 +93,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('test result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read wash'),
             onPressed: () async {
               var result = await db.findAll('wash');
@@ -103,7 +103,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('wash result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read washes'),
             onPressed: () async {
               var result = await db.findAll('wash');
@@ -116,7 +116,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('wash result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read wash_user'),
             onPressed: () async {
               var result = await db.findAll('wash_user');
@@ -126,7 +126,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('wash_user result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read washAllday'),
             onPressed: () async {
               var result = await db.findAllDay('2020-09-17');
@@ -136,7 +136,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('washAllday result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Read upd'),
             onPressed: () async {
               var result = await db.findAll('upd');
@@ -146,12 +146,12 @@ class _TestPageState extends State<TestPage> {
                 cprint('upd result is null');
               }
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Export test'),
             onPressed: () async {
               prov.export('test');
             }),
-        /* RaisedButton(
+        /* ElevatedButton(
             child: Text('Insert'),
             onPressed: () async {
               var result = await db.insertTest('yoba nah');
@@ -161,7 +161,7 @@ class _TestPageState extends State<TestPage> {
                 cprint('insert result is null');
               }
             }), */
-        /*  RaisedButton(
+        /*  ElevatedButton(
             child: Text('Update'),
             onPressed: () async {
               var result = await db.updateTest();
@@ -171,67 +171,67 @@ class _TestPageState extends State<TestPage> {
                 cprint('update result is null');
               }
             }), */
-        /* RaisedButton(
+        /* ElevatedButton(
             child: Text('Export'),
             onPressed: () {
               prov.export('test');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Import'),
             onPressed: () {
               prov.import('test');
             }), */
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate ctg'),
             onPressed: () async {
               await db.truncate('category');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate service'),
             onPressed: () async {
               await db.truncate('service');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate user'),
             onPressed: () async {
               await db.truncate('user');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate price'),
             onPressed: () async {
               await db.truncate('price');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate wash'),
             onPressed: () async {
               await db.truncate('wash');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate wash_user'),
             onPressed: () async {
               await db.truncate('wash_user');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate upd'),
             onPressed: () async {
               await db.truncate('upd');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Truncate test'),
             onPressed: () async {
               await db.truncate('test');
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('Delete wash'),
             onPressed: () async {
               db.deleteAll('wash', where: "id=1");
             }),
-        RaisedButton(
+        ElevatedButton(
             child: Text('drop db'),
             onPressed: () {
               db.dropDb();
             }),
-        /* RaisedButton(
+        /* ElevatedButton(
             child: Text('Check'),
             onPressed: () async {
               await db.checkLocal('test', 1);
