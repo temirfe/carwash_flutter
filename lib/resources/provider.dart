@@ -261,6 +261,7 @@ class RootProvider with ChangeNotifier {
 
   Future<void> requestCategories() async {
     //int ts = await db.getMaxTimestamp('category');
+    cprint('ctg endpoint ${Endpoints.categories}');
     try {
       Response response = await Dio().get(
         Endpoints.categories, /* queryParameters: {'updated_at': ts} */
