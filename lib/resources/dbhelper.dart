@@ -1,28 +1,24 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
-import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:carwash/resources/provider.dart';
 import 'package:carwash/resources/washModel.dart';
 import 'session.dart';
-import 'endpoints.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = new DatabaseHelper.internal();
   factory DatabaseHelper() => _instance;
 
-  static Database _db;
+  static Database? _db;
 
   Future<Database> get db async {
-    if (_db != null) return _db;
+    if (_db != null) return _db!;
     _db = await initDb();
-    return _db;
+    return _db!;
   }
 
   DatabaseHelper.internal();
@@ -44,10 +40,10 @@ class DatabaseHelper {
   }
 
   closeDb() {
-    _db.close();
+    _db?.close();
   }
 
-  Future<int> insertTest(String txt) async {
+  Future<int> insertTest(String? txt) async {
     DateTime now = DateTime.now();
     int currentTS = (now.millisecondsSinceEpoch / 1000).round();
     if (txt == null) {
@@ -113,7 +109,7 @@ class DatabaseHelper {
   }
 
   Future<Map<String, dynamic>> insertWash(
-      Map formData, RootProvider prov) async {
+      Map<String, dynamic> formData, RootProvider prov) async {
     int ts = (DateTime.now().millisecondsSinceEpoch / 1000).round();
     List<Map> formDataWashers = [];
 
@@ -124,7 +120,7 @@ class DatabaseHelper {
     List washers = formData['washers'];
     formData.remove('washers');
     washers.forEach((uid) {
-      formDataWashers.add(prov.washersMap[int.parse(uid)]);
+      formDataWashers.add(prov.washersMap[int.parse(uid)]!);
     });
 
     var dbo = await db;
@@ -148,7 +144,7 @@ class DatabaseHelper {
   }
 
   Future<Map<String, dynamic>> updateWash(
-      Map formData, RootProvider prov) async {
+      Map<String, dynamic> formData, RootProvider prov) async {
     int ts = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
     formData['updated_at'] = ts;
@@ -184,7 +180,7 @@ class DatabaseHelper {
         batch.insert('upd', {
           'wash_id': formData['id'],
           'field': 'wash_use',
-          'old_value': prov.washersMap[int.parse(e)]['name'],
+          'old_value': prov.washersMap[int.parse(e)]!['name'],
           'new_value': 'удалено',
           'created_by': session.getInt('userId'),
           'created_at': ts,
@@ -198,7 +194,7 @@ class DatabaseHelper {
         batch.insert('upd', {
           'wash_id': formData['id'],
           'field': 'wash_us',
-          'new_value': prov.washersMap[int.parse(e)]['name'],
+          'new_value': prov.washersMap[int.parse(e)]!['name'],
           'old_value': 'добавлено',
           'created_by': session.getInt('userId'),
           'created_at': ts,
@@ -283,13 +279,13 @@ class DatabaseHelper {
       sleep(const Duration(seconds: 1));
     }
     String sql = "SELECT * FROM wash WHERE id > 0";
-    if (prov.queryPlate != null && prov.queryPlate != '') {
+    if (prov.queryPlate != '') {
       sql += " AND plate='${prov.queryPlate}'";
     } else {
       DateTime now = DateTime.now();
       DateTime fromDate = DateTime(now.year, now.month, now.day);
       if (prov.showListFromDate != null) {
-        fromDate = DateTime.parse(prov.showListFromDate);
+        fromDate = DateTime.parse(prov.showListFromDate!);
       }
       int fromTS = (fromDate.millisecondsSinceEpoch / 1000).round();
 
@@ -309,7 +305,7 @@ class DatabaseHelper {
     return res;
   }
 
-  Future<List<Map<String, dynamic>>> findAllDay(String date) async {
+  Future<List<Map<String, dynamic>>> findAllDay(String? date) async {
     var dbo = await db;
     if (!dbo.isOpen) {
       //cprint('db is not open findAllDay');
@@ -357,7 +353,7 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> findAll(String tbl,
-      {String where, String fields, int limit}) async {
+      {String? where, String? fields, int? limit}) async {
     var dbo = await db;
     if (dbo.isOpen) {
       //cprint('db is not open findAll');
@@ -379,14 +375,14 @@ class DatabaseHelper {
     return [];
   }
 
-  Future<int> count(String tbl, {String where}) async {
+  Future<int?> count(String tbl, {String? where}) async {
     var dbo = await db;
     if (dbo.isOpen) {
       String sql = "SELECT COUNT(*) as cnt FROM $tbl";
       if (where != null) {
         sql += " WHERE " + where;
       }
-      var res = await dbo.rawQuery(sql);
+      List<Map<String, dynamic>> res = await dbo.rawQuery(sql);
       return res[0]['cnt'];
     }
     return null;
@@ -477,7 +473,7 @@ class DatabaseHelper {
     });
   }
 
-  void deleteAll(String tbl, {String where}) async {
+  void deleteAll(String tbl, {String? where}) async {
     var dbo = await db;
     dbo.delete(tbl, where: where);
   }
@@ -487,7 +483,7 @@ class DatabaseHelper {
     var dbo = await db;
     List res = await dbo
         .rawQuery("SELECT id FROM $tbl WHERE server_id=$serverId LIMIT 1");
-    if (res != null && res.isNotEmpty) {
+    if (res.isNotEmpty) {
       //cprint('checkLocal ${res[0]['id']}');
       return res[0]['id'];
     }
@@ -507,7 +503,7 @@ class DatabaseHelper {
         sql = "SELECT MAX(server_id) AS upd_serv FROM deleted";
       }
 
-      var result = await dbo.rawQuery(sql);
+      List<Map<String, dynamic>> result = await dbo.rawQuery(sql);
       if (result.length == 0) {
         //cprint('db result.length is 0');
         return 0;
@@ -525,7 +521,8 @@ class DatabaseHelper {
   Future<int> getMaxServerId(String table) async {
     var dbo = await db;
     if (dbo.isOpen) {
-      var result = await dbo.rawQuery("SELECT MAX(server_id) FROM $table");
+      List<Map<String, dynamic>> result =
+          await dbo.rawQuery("SELECT MAX(server_id) FROM $table");
       if (result.length == 0) {
         //cprint('db result.length is 0');
         return 0;

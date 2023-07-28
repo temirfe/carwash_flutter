@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:data_connection_checker/data_connection_checker.dart';
 import 'package:carwash/resources/session.dart';
 import 'package:carwash/resources/washModel.dart';
 import 'package:carwash/resources/dbhelper.dart';
@@ -15,20 +14,20 @@ import 'endpoints.dart';
 
 class RootProvider with ChangeNotifier {
   int value = 0;
-  BuildContext rcontext;
-  int navIndex = 0, xPageCount, xTotalCount = 0, xCurrentPage = 0;
+  BuildContext? rcontext;
+  int navIndex = 0, xPageCount = 0, xTotalCount = 0, xCurrentPage = 0;
   Map<String, dynamic> washFormMap = {'services': []},
       subserv2Map = {'washers': []},
       addServMap = {'washers': []};
   Map<int, Wash> washesMap = {};
-  List categories,
+  List? categories,
       washers,
       services,
       activeWashers, //it's List<Map<String, String>>
       discounts, //List<Map<String, String>>
       servbox, //List<Map<String, String>>
       boxes; //List<Map<String, String>>
-  List prices; //it's List<Map<String, dynamic>>
+  List? prices; //it's List<Map<String, dynamic>>
   Map<int, String> ctgNameMap = {}, servNameMap = {};
   Map<int, Map> washersMap = {};
   final DatabaseHelper db = DatabaseHelper();
@@ -43,15 +42,16 @@ class RootProvider with ChangeNotifier {
   List<String> selectedServices = [], selectedWashers = [], updateWashers = [];
 
   bool isSubmitting = false, loginSuccess = false, isLoading = true;
-  String loginError, washFormError = "";
-  Timer timer;
-  String formPriceShow;
-  List<String> cameraImgs;
-  List analyticsList;
-  String showListFromDate;
+  String? loginError;
+  String washFormError = "";
+  Timer? timer;
+  String? formPriceShow;
+  List<String>? cameraImgs;
+  List? analyticsList;
+  String? showListFromDate;
   bool fabVisible = true;
-  String today;
-  String version; //app version
+  String? today;
+  String? version; //app version
   String queryPlate = "";
 
   void closeStreams() {
@@ -67,7 +67,8 @@ class RootProvider with ChangeNotifier {
 
   void plateQueryRequest(String plate) async {
     queryPlate = plate;
-    bool result = await DataConnectionChecker().hasConnection;
+    //bool result = await DataConnectionChecker().hasConnection;
+    bool result = true;
     if (result && plate.length > 0) {
       requestList();
     } else {
@@ -76,7 +77,7 @@ class RootProvider with ChangeNotifier {
   }
 
   void setCameraImg(path) {
-    cameraImgs.add(path);
+    cameraImgs?.add(path);
     notifyListeners();
   }
 
@@ -92,7 +93,7 @@ class RootProvider with ChangeNotifier {
   }
 
   BuildContext getContext() {
-    return rcontext;
+    return rcontext!;
   }
 
   void setNavIndex(int index) {
@@ -121,7 +122,7 @@ class RootProvider with ChangeNotifier {
   void requestList() async {
     //cprint('requestList');
     errorMessage = '';
-    String authKey = session.getString('authKey');
+    String? authKey = session.getString('authKey');
     try {
       isLoading = true;
       fabVisible = false;
@@ -157,7 +158,7 @@ class RootProvider with ChangeNotifier {
       isLoading = false;
       fabVisible = true;
       notifyListeners();
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       print(e);
       theErr(e);
     }
@@ -176,7 +177,7 @@ class RootProvider with ChangeNotifier {
     try {
       Response response = await Dio().post(Endpoints.login,
           options: Options(headers: {'Authorization': basicAuth}));
-      Map<String, dynamic> resp = response.data;
+      Map<String, dynamic>? resp = response.data;
 
       //cprint('logged in $resp');
       if (resp != null && resp.containsKey('id')) {
@@ -187,22 +188,23 @@ class RootProvider with ChangeNotifier {
       }
       isSubmitting = false;
       notifyListeners();
-    } catch (e) {
-      if (e.response != null && e.response.statusCode == 401) {
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.statusCode == 401) {
         loginError = 'Неверный логин или пароль';
         isSubmitting = false;
         notifyListeners();
       } else {
         print(e);
         // Something happened in setting up or sending the request that triggered an Error
-        cprint('Error request: ${e.request.headers}');
+        cprint('Error type: ${e.type}');
         cprint('Error message: ${e.message}');
       }
     }
   }
 
   Future<void> formRequests() async {
-    bool result = await DataConnectionChecker().hasConnection;
+    //bool result = await DataConnectionChecker().hasConnection;
+    bool result = true;
     if (result) {
       //requestDeleteds();
       requestCategories();
@@ -254,7 +256,7 @@ class RootProvider with ChangeNotifier {
       );
       servbox = response.data;
       //cprint('servbox resp: ${response.data}');
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestServiceBoxes: $e');
     }
   }
@@ -273,7 +275,7 @@ class RootProvider with ChangeNotifier {
         populateCategories(response.data);
         //populateFromDb();
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestCategories: $e');
     }
   }
@@ -297,7 +299,7 @@ class RootProvider with ChangeNotifier {
         }
       });
       notifyListeners(); */
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestWashers: $e');
     }
   }
@@ -312,7 +314,7 @@ class RootProvider with ChangeNotifier {
         activeWashers = response.data;
         notifyListeners();
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestActiveWashers: $e');
     }
   }
@@ -326,7 +328,7 @@ class RootProvider with ChangeNotifier {
         //await db.import('user', response.data);
         discounts = response.data;
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestDiscounts: $e');
     }
   }
@@ -340,7 +342,7 @@ class RootProvider with ChangeNotifier {
         //await db.import('user', response.data);
         boxes = response.data;
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestBoxes: $e');
     }
   }
@@ -354,7 +356,7 @@ class RootProvider with ChangeNotifier {
       if (response.data != null && response.data.isNotEmpty) {
         db.importDeleted(response.data);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestDeletedss: $e');
     }
   }
@@ -372,7 +374,7 @@ class RootProvider with ChangeNotifier {
         prices = response.data;
       }
       //notifyListeners();
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('Error requestPrices: $e');
     }
   }
@@ -402,7 +404,7 @@ class RootProvider with ChangeNotifier {
     if (isMain) {
       mainServBox = [];
     }
-    servbox.forEach((sbm) {
+    servbox?.forEach((sbm) {
       if (sbm['service_id'] == serviceId) {
         if (isMain) {
           mainServBox.add(sbm['box_id']);
@@ -421,7 +423,7 @@ class RootProvider with ChangeNotifier {
     int thePrice = 0;
     if (washFormMap.containsKey('service_id') &&
         washFormMap.containsKey('category_id')) {
-      prices.forEach((priceMap) {
+      prices?.forEach((priceMap) {
         if (priceMap['service_id'].toString() == washFormMap['service_id'] &&
             (priceMap['category_id'].toString() == washFormMap['category_id'] ||
                 priceMap['category_id'] == null)) {
@@ -431,19 +433,19 @@ class RootProvider with ChangeNotifier {
       });
       if (washFormMap['services'].isNotEmpty) {
         washFormMap['services'].forEach((servIdStr) {
-          prices.forEach((priceMap) {
+          prices?.forEach((priceMap) {
             if (priceMap['service_id'].toString() == servIdStr &&
                 (priceMap['category_id'].toString() ==
                         washFormMap['category_id'] ||
                     priceMap['category_id'] == null)) {
-              thePrice += priceMap['price'];
+              thePrice += int.parse(priceMap['price']);
               //cprint('setting fp is good $formPriceShow');
             }
           });
         });
       }
       if (washFormMap.containsKey('discount_id')) {
-        discounts.forEach((dmap) {
+        discounts?.forEach((dmap) {
           if (dmap['id'] == washFormMap['discount_id']) {
             int disc = int.parse(dmap['discount']);
             if (dmap['is_pct'] == '1') {
@@ -519,13 +521,13 @@ class RootProvider with ChangeNotifier {
 
   Future<bool> changeWasherStatus(String id, bool value) async {
     try {
-      String authKey = session.getString('authKey');
+      String? authKey = session.getString('authKey');
       Response response = await Dio().post(
         Endpoints.washer,
         data: {'id': id, 'val': value},
         options: Options(headers: {'Authorization': "Bearer $authKey"}),
       );
-      List resp = response.data;
+      List? resp = response.data;
       if (resp != null) {
         washers = resp;
         /* selectedWashers = [];
@@ -566,7 +568,7 @@ class RootProvider with ChangeNotifier {
 
   void requestWash(int id) async {
     try {
-      String authKey = session.getString('authKey');
+      String? authKey = session.getString('authKey');
       Response response = await Dio().get(Endpoints.wash + '/$id',
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
       var resp = response.data; //Map<String<dynamic>
@@ -583,7 +585,7 @@ class RootProvider with ChangeNotifier {
   void requestFinish(int washId, int washServiceId) async {
     try {
       sinkMap({'finish': true});
-      String authKey = session.getString('authKey');
+      String? authKey = session.getString('authKey');
       Response response = await Dio().post(Endpoints.finish,
           data: {'id': washServiceId},
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
@@ -602,7 +604,7 @@ class RootProvider with ChangeNotifier {
   Future<bool> requestAddService(int washId) async {
     try {
       sinkMap({'addService': true});
-      String authKey = session.getString('authKey');
+      String? authKey = session.getString('authKey');
       Response response = await Dio().post(Endpoints.wash + '/addservice',
           data: addServMap,
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
@@ -621,7 +623,7 @@ class RootProvider with ChangeNotifier {
   }
 
   void startSecond(int washId, int washServiceId) async {
-    String authKey = session.getString('authKey');
+    String? authKey = session.getString('authKey');
     sinkMap({'second': true});
     try {
       Response response = await Dio().post(Endpoints.wash + '/start',
@@ -640,14 +642,14 @@ class RootProvider with ChangeNotifier {
 
   void washPaid(Wash wash) async {
     await db.washPaid(wash);
-    washesMap[wash.id].setPaid = 1;
+    washesMap[wash.id]!.setPaid = 1;
     notifyListeners();
   }
 
   void requestPaid(int id) async {
     sinkMap({'paid': true});
     try {
-      String authKey = session.getString('authKey');
+      String? authKey = session.getString('authKey');
       Response response = await Dio().post(Endpoints.paid,
           data: {'id': id},
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
@@ -679,7 +681,7 @@ class RootProvider with ChangeNotifier {
 
   void requestAlldayDb() async {
     //cprint('requestAllday $showListFromDate');
-    List<Map<String, dynamic>> rows = await db.findAllDay(showListFromDate);
+    List<Map<String, dynamic>> rows = await db.findAllDay(showListFromDate!);
     if (rows.isNotEmpty) {
       Map<int, Map> washMap = {};
       if (washersMap.isEmpty) {
@@ -688,11 +690,11 @@ class RootProvider with ChangeNotifier {
       rows.forEach((row) {
         Map washer = {
           'id': row['user_id'],
-          'name': washersMap[row['user_id']]['name'],
+          'name': washersMap[row['user_id']]?['name'],
           'wage': row['wage']
         };
         if (washMap.containsKey(row['id'])) {
-          washMap[row['id']]['washers'].add(washer);
+          washMap[row['id']]?['washers'].add(washer);
         } else {
           washMap[row['id']] = {
             'id': row['id'],
@@ -703,7 +705,7 @@ class RootProvider with ChangeNotifier {
         }
       });
       analyticsList = [];
-      washMap.forEach((id, wash) => analyticsList.add(wash));
+      washMap.forEach((id, wash) => analyticsList?.add(wash));
       notifyListeners();
     }
   }
@@ -711,24 +713,24 @@ class RootProvider with ChangeNotifier {
   void requestAllday() async {
     try {
       errorMessage = '';
-      String authKey = session.getString('authKey');
+      String? authKey = session.getString('authKey');
       Response response = await Dio().get(Endpoints.allday,
           queryParameters: {'date': showListFromDate},
           options: Options(headers: {'Authorization': "Bearer $authKey"}));
       analyticsList = response.data;
       notifyListeners();
       //cprint('resp: $response.data');
-    } catch (e) {
+    } on DioException catch (e) {
       theErr(e);
     }
   }
 
-  void theErr(DioError e) {
-    if (e.response.statusCode == 403) {
+  void theErr(DioException e) {
+    if (e.response?.statusCode == 403) {
       String msg = 'У вас недостаточно прав';
 
-      if (e.response.data.containsKey('message')) {
-        msg = e.response.data['message'];
+      if (e.response?.data.containsKey('message')) {
+        msg = e.response?.data['message'];
       }
       isLoading = false;
       fabVisible = false;
@@ -737,7 +739,7 @@ class RootProvider with ChangeNotifier {
     }
   }
 
-  void requestListFromDb({bool cont}) async {
+  void requestListFromDb({bool? cont}) async {
     //cprint('requestListFromDb');
     isLoading = true;
     await populateFromDb(true);
@@ -791,16 +793,16 @@ class RootProvider with ChangeNotifier {
     return FutureBuilder(
         future: getVersionNumber(),
         builder: (BuildContext context, AsyncSnapshot<String> snapshot) => Text(
-              snapshot.hasData ? snapshot.data : "",
+              snapshot.hasData ? snapshot.data! : "",
             ) // The widget using the data
         );
   }
 
   Future<void> exportWash() async {
-    bool hasConnection = await DataConnectionChecker().hasConnection;
+    /* bool hasConnection = await DataConnectionChecker().hasConnection;
     if (!hasConnection) {
       return;
-    }
+    } */
 
     //delete server deletes first, otherwise they get exported and created new at server
     await requestDeleteds();
@@ -815,12 +817,12 @@ class RootProvider with ChangeNotifier {
       ts = 0;
     } */
 
-    String authKey = session.getString('authKey');
+    String? authKey = session.getString('authKey');
 
     //var rows = await db.findAll('wash', where: 'updated_at > $ts', limit: 10);
-    var rows =
+    List<Map<String, dynamic>> rows =
         await db.findAll('wash', where: "tags NOT LIKE '%web%'", limit: 10);
-    if (rows != null && rows.length > 0) {
+    if (rows.length > 0) {
       List formList = [];
       List idList = [];
       for (Map row in rows) {
@@ -852,16 +854,16 @@ class RootProvider with ChangeNotifier {
           await db.saveServerIds('wash', response.data);
           await db.addWebTag(idList);
         }
-      } on DioError catch (e) {
+      } on DioException catch (e) {
         cprint('Error message: $e');
         if (e.response != null) {
-          cprint('Error resp.data: ${e.response.data}');
-          cprint('Error resp.statusCode: ${e.response.statusCode}');
-          cprint('Error resp.headers: ${e.response.headers}');
-          cprint('Error resp.request: ${e.response.request}');
+          cprint('Error resp.data: ${e.response?.data}');
+          cprint('Error resp.statusCode: ${e.response?.statusCode}');
+          cprint('Error resp.headers: ${e.response?.headers}');
+          cprint('Error resp.extra: ${e.response?.extra}');
         } else {
           // Something happened in setting up or sending the request that triggered an Error
-          cprint('Error request: ${e.request.headers}');
+          cprint('Error type: ${e.type}');
           cprint('Error message: ${e.message}');
         }
       }
@@ -898,14 +900,14 @@ class RootProvider with ChangeNotifier {
   }
 
   void import(String tbl) async {
-    bool hasConnection = await DataConnectionChecker().hasConnection;
+    /* bool hasConnection = await DataConnectionChecker().hasConnection;
     if (!hasConnection) {
       return;
-    }
+    } */
 
     //ts is latest update_server to tell server from which rows to send
     var ts = await db.getMaxTimestamp(tbl);
-    String authKey = session.getString('authKey');
+    String? authKey = session.getString('authKey');
 
     Response response = await Dio().get(Endpoints.export,
         queryParameters: {'tbl': tbl, 'updated_at': ts},
@@ -918,20 +920,20 @@ class RootProvider with ChangeNotifier {
   }
 
   void importWash() async {
-    bool hasConnection = await DataConnectionChecker().hasConnection;
+    /* bool hasConnection = await DataConnectionChecker().hasConnection;
     if (!hasConnection) {
       return;
-    }
+    } */
 
     //ts is latest update_server to tell server from which rows to send
     //int ts = await db.getMaxTimestamp('wash');
     //int lastServeId = await db.getMaxServerId('wash');
-    String authKey = session.getString('authKey');
-    String deviceId = session.getString('deviceId');
+    String? authKey = session.getString('authKey');
+    String? deviceId = session.getString('deviceId');
 
     //when new version of app installed, server tags should be reset for this device
     bool reset = false;
-    int washCount = await db.count('wash');
+    int? washCount = await db.count('wash');
     if (washCount == 0) {
       reset = true;
     }
@@ -949,16 +951,16 @@ class RootProvider with ChangeNotifier {
           },
           options: Options(headers: {'Authorization': 'Bearer $authKey'}));
       resp = response.data;
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       cprint('importWash Error message: $e');
       if (e.response != null) {
-        cprint('Error resp.data: ${e.response.data}');
-        cprint('Error resp.statusCode: ${e.response.statusCode}');
-        cprint('Error resp.headers: ${e.response.headers}');
-        cprint('Error resp.request: ${e.response.request}');
+        cprint('Error resp.data: ${e.response?.data}');
+        cprint('Error resp.statusCode: ${e.response?.statusCode}');
+        cprint('Error resp.headers: ${e.response?.headers}');
+        cprint('Error resp.extra: ${e.response?.extra}');
       } else {
         // Something happened in setting up or sending the request that triggered an Error
-        cprint('Error request: ${e.request.headers}');
+        cprint('Error type: ${e.type}');
         cprint('Error message: ${e.message}');
       }
     }
@@ -966,7 +968,7 @@ class RootProvider with ChangeNotifier {
     //cprint('imp resp $resp');
     var dbo = await db.db;
     if (resp != null && resp.length > 0) {
-      for (Map wash in resp) {
+      for (Map<String, dynamic> wash in resp) {
         wash['server_id'] = wash['id'];
         wash['updated_server'] = wash['updated_at'];
         List washers = wash['washers'];
@@ -1012,7 +1014,7 @@ class RootProvider with ChangeNotifier {
 
   void populateCategories(List src) {
     categories = src;
-    categories.forEach((ctgMap) {
+    categories?.forEach((ctgMap) {
       var severId;
       if (ctgMap.containsKey('server_id')) {
         severId = ctgMap['server_id'];
@@ -1028,7 +1030,7 @@ class RootProvider with ChangeNotifier {
 
   void populateServices(List src) {
     services = src;
-    services.forEach((srvMap) {
+    services?.forEach((srvMap) {
       var severId;
       if (srvMap.containsKey('server_id')) {
         severId = srvMap['server_id'];
@@ -1044,7 +1046,7 @@ class RootProvider with ChangeNotifier {
 
   void populateWashers(List src) {
     washers = src;
-    washers.forEach((map) {
+    washers?.forEach((map) {
       var severId;
       if (map.containsKey('server_id')) {
         severId = map['server_id'];
@@ -1068,19 +1070,13 @@ class RootProvider with ChangeNotifier {
 
   Future<void> populateFromDb(bool notify) async {
     bool isPopulated = false;
-    if (categories == null ||
-        categories.isEmpty ||
-        ctgNameMap == null ||
-        ctgNameMap.isEmpty) {
+    if (categories == null || categories!.isEmpty || ctgNameMap.isEmpty) {
       //cprint('populateFromDb findall category');
       List dbCtgs = await db.findAll('category');
       populateCategories(dbCtgs);
       isPopulated = true;
     }
-    if (services == null ||
-        services.isEmpty ||
-        servNameMap == null ||
-        servNameMap.isEmpty) {
+    if (services == null || services!.isEmpty || servNameMap.isEmpty) {
       //cprint('populateFromDb findall service');
       List dbSrv = await db.findAll('service');
       populateServices(dbSrv);
@@ -1134,10 +1130,10 @@ class RootProvider with ChangeNotifier {
     return good;
   }
 
-  Future<int> submit(String mode) async {
+  Future<int?> submit(String mode) async {
     bool good = true;
     washFormError = "";
-    String authKey = session.getString('authKey');
+    String? authKey = session.getString('authKey');
     if (!washFormMap.containsKey('category_id')) {
       washFormError += 'Выберите категорию \n';
       good = false;
@@ -1170,9 +1166,9 @@ class RootProvider with ChangeNotifier {
       washFormError += 'Выберите персонал ';
       good = false;
     } */
-    if (cameraImgs.isNotEmpty) {
+    if (cameraImgs != null && cameraImgs!.isNotEmpty) {
       int i = 0;
-      cameraImgs.forEach((path) {
+      cameraImgs!.forEach((path) {
         washFormMap['apimages[$i]'] =
             base64Encode(File(path).readAsBytesSync());
         i++;
@@ -1181,7 +1177,7 @@ class RootProvider with ChangeNotifier {
     if (good) {
       //cprint('submit $washFormMap');
       Response response;
-      Map<String, dynamic> dbData;
+      //Map<String, dynamic> dbData;
       try {
         isSubmitting = true;
         notifyListeners();
@@ -1230,16 +1226,16 @@ class RootProvider with ChangeNotifier {
         //selectedServices = [];
         notifyListeners();
         return response.data['id'];
-      } on DioError catch (e) {
+      } on DioException catch (e) {
         cprint('Error message: $e');
         if (e.response != null) {
-          cprint('Error resp.data: ${e.response.data}');
-          cprint('Error resp.statusCode: ${e.response.statusCode}');
-          cprint('Error resp.headers: ${e.response.headers}');
-          cprint('Error resp.request: ${e.response.request}');
+          cprint('Error resp.data: ${e.response?.data}');
+          cprint('Error resp.statusCode: ${e.response?.statusCode}');
+          cprint('Error resp.headers: ${e.response?.headers}');
+          cprint('Error resp.extra: ${e.response?.extra}');
         } else {
           // Something happened in setting up or sending the request that triggered an Error
-          cprint('Error request: ${e.request.headers}');
+          cprint('Error type: ${e.type}');
           cprint('Error message: ${e.message}');
         }
       }
@@ -1250,7 +1246,7 @@ class RootProvider with ChangeNotifier {
     return null;
   }
 
-  Future<int> submitDb(String mode) async {
+  Future<int?> submitDb(String mode) async {
     bool good = true;
     washFormError = "";
     if (!washFormMap.containsKey('category_id')) {
@@ -1261,7 +1257,7 @@ class RootProvider with ChangeNotifier {
       washFormError += 'Выберите услугу \n';
       good = false;
     }
-    if (mode == 'insert' && cameraImgs.isEmpty) {
+    if (mode == 'insert' && cameraImgs!.isEmpty) {
       washFormError += 'Добавьте фото \n';
       good = false;
     }
@@ -1273,8 +1269,8 @@ class RootProvider with ChangeNotifier {
       washFormError += 'Выберите персонал ';
       good = false;
     }
-    if (cameraImgs.isNotEmpty) {
-      washFormMap['photo_local'] = cameraImgs.join(';');
+    if (cameraImgs!.isNotEmpty) {
+      washFormMap['photo_local'] = cameraImgs!.join(';');
     }
     if (good) {
       //cprint('submit $washFormMap');
