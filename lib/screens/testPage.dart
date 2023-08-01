@@ -5,10 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:carwash/resources/session.dart';
 import 'package:carwash/resources/provider.dart';
 import 'package:carwash/resources/dbhelper.dart';
-import 'washList.dart';
-import 'analytics.dart';
-import 'settings.dart';
-import 'package:intl/intl.dart';
 
 class TestPage extends StatefulWidget {
   @override
@@ -16,7 +12,7 @@ class TestPage extends StatefulWidget {
 }
 
 class _TestPageState extends State<TestPage> {
-  RootProvider prov;
+  late RootProvider prov;
   final DatabaseHelper db = DatabaseHelper();
 
   @override

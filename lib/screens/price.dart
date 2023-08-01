@@ -22,18 +22,18 @@ class Price extends StatelessWidget {
       List<String> serviceList = [''];
       Map<String, Map> ctgPriceMap = {};
       Map<String, Map> ctgDurMap = {};
-      prov.prices.forEach((prMap) {
+      prov.prices?.forEach((prMap) {
         if (!serviceList.contains(prMap['service'])) {
           serviceList.add(prMap['service']);
         }
         if (ctgPriceMap.containsKey(prMap['category'])) {
-          ctgPriceMap[prMap['category']][prMap['service']] = prMap['price'];
+          ctgPriceMap[prMap['category']]![prMap['service']] = prMap['price'];
         } else {
           ctgPriceMap[prMap['category']] = {prMap['service']: prMap['price']};
         }
 
         if (ctgDurMap.containsKey(prMap['category'])) {
-          ctgDurMap[prMap['category']][prMap['service']] = prMap['duration'];
+          ctgDurMap[prMap['category']]![prMap['service']] = prMap['duration'];
         } else {
           ctgDurMap[prMap['category']] = {prMap['service']: prMap['duration']};
         }

@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 //import 'package:provider/provider.dart';
 import 'package:carwash/resources/provider.dart';
 import 'package:carwash/resources/timerStream.dart';
-import 'package:carwash/resources/session.dart';
 
 Widget washList(BuildContext context, RootProvider prov) {
   //print('washList build');
   List<Widget> localist = [];
   int iReverse = prov.xTotalCount;
-  if (iReverse != null && iReverse < prov.washesMap.length) {
+  if (iReverse < prov.washesMap.length) {
     iReverse = prov.xTotalCount;
   }
   prov.washesMap.forEach((k, v) {
@@ -36,16 +35,16 @@ Widget washList(BuildContext context, RootProvider prov) {
         if (ws['duration_status'] == 1) {
           durClr = Colors.green;
         } else if (ws['duration_status'] == 2) {
-          durClr = Colors.red[200];
+          durClr = Colors.red[200]!;
         }
         int durationMin = (ws['duration'] / 60).round();
         durationWidget = Text('$durationMin', style: TextStyle(color: durClr));
       } else if (ws['started_at'] == null) {
         durationWidget = Text('0', style: TextStyle(color: durClr));
-        cardColor = Colors.orange[50];
+        cardColor = Colors.orange[50]!;
       } else {
         durationWidget = startStrBuild(ws['started_at'], false, color: durClr);
-        cardColor = Colors.orange[50];
+        cardColor = Colors.orange[50]!;
       }
       durChildrn.add(Icon(Icons.timer, size: 16.0, color: durClr));
       durChildrn.add(SizedBox(width: 3.0));
@@ -85,17 +84,17 @@ Widget washList(BuildContext context, RootProvider prov) {
     Color moneyClr = Colors.green;
     if (v.paid == null) {
       moneyClr = Colors.orange;
-      cardColor = Colors.orange[50];
+      cardColor = Colors.orange[50]!;
     }
 
     List<Widget> iconInfoRowList = [];
-    if (v.phone != null && v.phone != '') {
+    if (v.phone != '') {
       iconInfoRowList.add(Icon(Icons.phone, size: 14.0, color: Colors.grey));
       iconInfoRowList.add(SizedBox(
         width: 4.0,
       ));
     }
-    if (v.comment != null && v.comment != '') {
+    if (v.comment != '') {
       iconInfoRowList.add(Icon(Icons.comment, size: 14.0, color: Colors.grey));
       iconInfoRowList.add(SizedBox(
         width: 4.0,
@@ -117,12 +116,12 @@ Widget washList(BuildContext context, RootProvider prov) {
         width: 4.0,
       ));
     }
-    if (v.updatedAt != null && v.updatedAt != v.startedAt) {
+    if (v.updatedAt != v.startedAt) {
       iconInfoRowList.add(SizedBox());
       iconInfoRowList.add(Icon(Icons.create, size: 14.0, color: Colors.grey));
     }
     Widget marka() {
-      if (v.marka != null && v.marka != '') {
+      if (v.marka != '') {
         return Container(
           width: 148.0,
           child: Text(v.marka,
@@ -153,8 +152,8 @@ Widget washList(BuildContext context, RootProvider prov) {
         plt = Row(children: [
           Column(
             children: [
-              Text(matches.group(1), style: TextStyle(fontSize: 7.0)),
-              Text(matches.group(2), style: TextStyle(fontSize: 7.0)),
+              Text(matches?.group(1) ?? '', style: TextStyle(fontSize: 7.0)),
+              Text(matches?.group(2) ?? '', style: TextStyle(fontSize: 7.0)),
             ],
           ),
           SizedBox(width: 2.0),
@@ -163,9 +162,9 @@ Widget washList(BuildContext context, RootProvider prov) {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.ideographic,
               children: [
-                Text(matches.group(3), style: TextStyle(fontSize: 18.0)),
+                Text(matches?.group(3) ?? '', style: TextStyle(fontSize: 18.0)),
                 SizedBox(width: 2.0),
-                Text(matches.group(4), style: TextStyle(fontSize: 14.0)),
+                Text(matches?.group(4) ?? '', style: TextStyle(fontSize: 14.0)),
               ])
         ]);
       } else {
@@ -275,7 +274,7 @@ Widget washList(BuildContext context, RootProvider prov) {
     iReverse--;
   });
 
-  double scrollMax;
+  double? scrollMax;
 
   bool _onScrollNotification(ScrollNotification notification) {
     if (notification is ScrollEndNotification) {
@@ -283,7 +282,7 @@ Widget washList(BuildContext context, RootProvider prov) {
       final max = notification.metrics.maxScrollExtent;
       if (after < 200) {
         if (scrollMax != max) {
-          if (prov.xPageCount != null && prov.xCurrentPage < prov.xPageCount) {
+          if (prov.xCurrentPage < prov.xPageCount) {
             prov.requestList();
             //prov.requestListFromDb(cont: true);
           }

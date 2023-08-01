@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login.dart';
 import 'screens/home.dart';
@@ -83,8 +82,8 @@ class MyApp extends StatelessWidget {
     } else {
       return MaterialPageRoute(
           builder: (context) {
-            final itemId = int.parse(settings.name.replaceFirst('/', ''));
-            if (itemId != null && itemId > 0) {
+            final itemId = int.parse(settings.name!.replaceFirst('/', ''));
+            if (itemId > 0) {
               return WashView(itemId);
             } else {
               return HomePage();

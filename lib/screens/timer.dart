@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class TimePage extends StatefulWidget {
   @override
@@ -9,7 +8,7 @@ class TimePage extends StatefulWidget {
 
 class _MyHomePageState extends State<TimePage> {
   String _timeString = "--:--";
-  Timer timer;
+  late Timer timer;
 
   @override
   void initState() {

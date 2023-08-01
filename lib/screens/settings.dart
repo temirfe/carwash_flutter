@@ -36,7 +36,10 @@ Widget settings(BuildContext context, RootProvider prov) {
         height: 24.0,
       ),
       Row(
-        children: [SizedBox(width: 12.0), Text(session.getString('username'))],
+        children: [
+          SizedBox(width: 12.0),
+          Text(session.getString('username') ?? '')
+        ],
       ),
       Padding(
         padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),

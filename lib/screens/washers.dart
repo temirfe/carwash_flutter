@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carwash/resources/provider.dart';
-import 'package:carwash/resources/session.dart';
 import 'package:carwash/resources/progressDialog.dart';
 
 class Washers extends StatelessWidget {
@@ -19,13 +18,13 @@ class Washers extends StatelessWidget {
         );
       }
       List<Widget> widList = [];
-      for (int i = 0; i < prov.washers.length; i++) {
+      for (int i = 0; i < prov.washers!.length; i++) {
 //cprint('washers ${prov.washers}');
         bool washerBool = true;
         /* if (prov.washers[i]['in_service'] == 0) {
           washerBool = false;
         } */
-        if (prov.washers[i]['in_service'] == '0') {
+        if (prov.washers![i]['in_service'] == '0') {
           washerBool = false;
         }
         widList.add(
@@ -33,12 +32,13 @@ class Washers extends StatelessWidget {
             contentPadding: EdgeInsets.all(0),
             child: CheckboxListTile(
               dense: true,
-              title: new Text(prov.washers[i]['username']),
+              title: new Text(prov.washers![i]['username']),
               controlAffinity: ListTileControlAffinity.leading,
               value: washerBool,
-              onChanged: (bool isTicked) async {
+              onChanged: (bool? isTicked) async {
                 pdial.show(context);
-                await prov.changeWasherStatus(prov.washers[i]['id'], isTicked);
+                await prov.changeWasherStatus(
+                    prov.washers![i]['id'], isTicked!);
                 pdial.hide();
               },
             ),

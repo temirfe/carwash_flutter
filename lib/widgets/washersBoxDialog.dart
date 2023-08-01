@@ -47,7 +47,7 @@ washersBoxDialog(BuildContext context, Map box) {
                     child: Consumer<RootProvider>(
                       builder: (context, prov, child) {
                         List<Widget> widList = [];
-                        prov.washers.forEach((map) {
+                        prov.washers?.forEach((map) {
                           if (map['in_service'] == '1') {
                             bool washerBool = false;
                             if (prov.washFormMap.containsKey('washers') &&
@@ -66,9 +66,9 @@ washersBoxDialog(BuildContext context, Map box) {
                                   controlAffinity:
                                       ListTileControlAffinity.leading,
                                   value: washerBool,
-                                  onChanged: (bool value) {
+                                  onChanged: (bool? value) {
                                     prov.formWasher(
-                                        box['id'], map['id'], value);
+                                        box['id'], map['id'], value!);
                                   },
                                 ),
                               ),

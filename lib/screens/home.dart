@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 //import 'package:carwash/resources/request.dart';
 import 'package:provider/provider.dart';
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'package:carwash/resources/session.dart';
 import 'package:carwash/resources/provider.dart';
@@ -14,7 +14,6 @@ import 'washList.dart';
 import 'analytics.dart';
 import 'settings.dart';
 import 'package:intl/intl.dart';
-import 'package:ansicolor/ansicolor.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -22,9 +21,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  RootProvider prov;
-  List<Widget> _widgetOptions;
-  String today, yesterday, beforeYesterday;
+  late RootProvider prov;
+  List<Widget>? _widgetOptions;
+  String? today, yesterday, beforeYesterday;
   //Timer exportTimer, importTimer;
 
   @override
@@ -82,14 +81,14 @@ class _HomePageState extends State<HomePage> {
         analytics(context, prov),
         settings(context, prov),
       ];
-      String appTitle = session.getString('username');
+      String? appTitle = session.getString('username');
       if (appTitle == null) {
         appTitle = 'CarWash';
       }
       /* if (prov.navIndex == 1) {
         appTitle = 'Новая мойка';
       } */
-      String iniDay = prov.showListFromDate;
+      String? iniDay = prov.showListFromDate;
       if (iniDay == null) {
         iniDay = today;
       }
@@ -112,9 +111,9 @@ class _HomePageState extends State<HomePage> {
                   value: beforeYesterday,
                 ),
               ],
-              onChanged: (String value) {
+              onChanged: (String? value) {
                 //prov.requestListFromDb();
-                prov.setDay(value);
+                prov.setDay(value!);
                 prov.requestList();
               },
             ),
@@ -157,7 +156,7 @@ class _HomePageState extends State<HomePage> {
         ),
         bottomNavigationBar: navbar(prov),
         body: Center(
-          child: _widgetOptions.elementAt(prov.navIndex),
+          child: _widgetOptions?.elementAt(prov.navIndex),
           //child: _widgetOptions.elementAt(0),
         ),
         floatingActionButton: Visibility(
@@ -185,18 +184,18 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<String> _getDeviceId() async {
+  Future<String?> _getDeviceId() async {
     final DeviceInfoPlugin deviceInfoPlugin = new DeviceInfoPlugin();
     try {
       if (Platform.isAndroid) {
         var build = await deviceInfoPlugin.androidInfo;
         //cprint('androidId ${build.androidId}');
-        session.setString('deviceId', build.androidId);
-        return build.androidId; //UUID for Android
+        session.setString('deviceId', build.id);
+        return build.id; //UUID for Android
       } else if (Platform.isIOS) {
         var data = await deviceInfoPlugin.iosInfo;
-        session.setString('deviceId', data.identifierForVendor);
-        return data.identifierForVendor; //UUID for iOS
+        session.setString('deviceId', data.identifierForVendor ?? '');
+        return data.identifierForVendor ?? ""; //UUID for iOS
       }
     } on PlatformException {
       print('Failed to get platform version');

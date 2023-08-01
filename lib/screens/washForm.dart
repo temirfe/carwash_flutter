@@ -14,7 +14,7 @@ import 'package:carwash/resources/endpoints.dart';
 import 'package:carwash/widgets/washersBoxDialog.dart';
 
 class WashForm extends StatefulWidget {
-  final int id;
+  final int? id;
   WashForm(this.id);
 
   @override
@@ -22,21 +22,21 @@ class WashForm extends StatefulWidget {
 }
 
 class _WashFormState extends State<WashForm> {
-  RootProvider prov;
+  late RootProvider prov;
   final TextEditingController _plateTC = new TextEditingController();
   final TextEditingController _commentTC = new TextEditingController();
   final TextEditingController _phoneTC = new TextEditingController();
   final TextEditingController _markaTC = new TextEditingController();
-  Wash wash;
-  int id;
+  Wash? wash;
+  int? id;
   final picker = ImagePicker();
   String saveBtnText = 'Начать';
   String mode = 'insert';
   String appBarTitle = 'Новая мойка';
   bool canEdit = true;
-  FocusNode plateFocus;
-  FocusNode phoneFocus;
-  FocusNode markaFocus;
+  FocusNode? plateFocus;
+  FocusNode? phoneFocus;
+  FocusNode? markaFocus;
 
   @override
   void initState() {
@@ -56,26 +56,26 @@ class _WashFormState extends State<WashForm> {
     if (widget.id != null) {
       mode = 'update';
       id = widget.id;
-      wash = prov.washesMap[id];
-      _plateTC.text = wash.plate;
-      _commentTC.text = wash.comment;
-      _phoneTC.text = wash.phone;
-      _markaTC.text = wash.marka;
+      wash = prov.washesMap[id]!;
+      _plateTC.text = wash!.plate;
+      _commentTC.text = wash!.comment;
+      _phoneTC.text = wash!.phone;
+      _markaTC.text = wash!.marka;
       saveBtnText = 'Сохранить';
       appBarTitle = 'Мойка ID $id ред.';
-      prov.washFormMap['category_id'] = wash.categoryId.toString();
-      prov.washFormMap['service_id'] = wash.serviceId.toString();
-      prov.servbox.forEach((sbm) {
-        if (sbm['service_id'] == wash.serviceId.toString()) {
+      prov.washFormMap['category_id'] = wash!.categoryId.toString();
+      prov.washFormMap['service_id'] = wash?.serviceId.toString();
+      prov.servbox?.forEach((sbm) {
+        if (sbm['service_id'] == wash?.serviceId.toString()) {
           prov.mainServBox.add(sbm['box_id']);
         }
       });
       //cprint('washForm washerIds ${wash.washerIds}');
-      prov.updateWashers = wash.washerIds;
+      prov.updateWashers = wash!.washerIds;
       prov.washFormMap['id'] = id;
-      prov.formPriceShow = wash.price.toString();
-      if (wash.discount != null) {
-        prov.washFormMap['discount_id'] = wash.discount['id'].toString();
+      prov.formPriceShow = wash?.price.toString();
+      if (wash?.discount != null) {
+        prov.washFormMap['discount_id'] = wash?.discount['id'].toString();
       }
 
       //not needed if update is to server
@@ -84,10 +84,10 @@ class _WashFormState extends State<WashForm> {
 
       int currentTS = (DateTime.now().millisecondsSinceEpoch / 1000).round();
       int startOrFinish = 0;
-      if (wash.finishedAt != null) {
-        startOrFinish = wash.finishedAt;
+      if (wash?.finishedAt != null) {
+        startOrFinish = wash!.finishedAt;
       } else {
-        startOrFinish = wash.startedAt;
+        startOrFinish = wash!.startedAt;
       }
       double passedMinutes = (currentTS - startOrFinish) / 60;
       if (passedMinutes > 180) {
@@ -96,15 +96,15 @@ class _WashFormState extends State<WashForm> {
       } else {
         cprint('can edit');
       }
-      wash.services.forEach((sMap) {
+      wash?.services.forEach((sMap) {
         prov.washFormMap['services'].add(sMap['service_id'].toString());
-        prov.servbox.forEach((sbm) {
+        prov.servbox?.forEach((sbm) {
           if (sbm['service_id'] == sMap['service_id'].toString()) {
             prov.extraServBox.add(sbm['box_id']);
           }
         });
       });
-      wash.boxes.forEach((boxMap) {
+      wash?.boxes.forEach((boxMap) {
         prov.washFormMap['washers'][boxMap['box_id'].toString()] =
             boxMap['washer_ids'];
       });
@@ -115,7 +115,7 @@ class _WashFormState extends State<WashForm> {
     if (widget.id == null &&
         prov.activeWashers != null &&
         prov.washFormMap['washers'].isEmpty) {
-      prov.activeWashers.forEach((am) {
+      prov.activeWashers?.forEach((am) {
         cprint('add active washer id ${am['user_id']}');
         if (!prov.washFormMap['washers'].containsKey(am['box_id'])) {
           prov.washFormMap['washers'][am['box_id']] = <String>[];
@@ -127,9 +127,9 @@ class _WashFormState extends State<WashForm> {
 
   @override
   void dispose() {
-    plateFocus.dispose();
-    phoneFocus.dispose();
-    markaFocus.dispose();
+    plateFocus?.dispose();
+    phoneFocus?.dispose();
+    markaFocus?.dispose();
     _plateTC.clear();
     _commentTC.clear();
     _phoneTC.clear();
@@ -143,12 +143,12 @@ class _WashFormState extends State<WashForm> {
     if (id == null) {
       //executed once after build is complete, only in create mode
       WidgetsBinding.instance
-          .addPostFrameCallback((_) => plateFocus.requestFocus());
+          .addPostFrameCallback((_) => plateFocus?.requestFocus());
     }
     return myScaffold(context, widget.id);
   }
 
-  Widget myScaffold(BuildContext context, int id) {
+  Widget myScaffold(BuildContext context, int? id) {
     return new WillPopScope(
       child: new Scaffold(
           appBar: AppBar(
@@ -163,12 +163,12 @@ class _WashFormState extends State<WashForm> {
   }
 
   Widget ctgRadioList(BuildContext context, RootProvider prov) {
-    String inival;
+    String? inival;
     if (prov.washFormMap.containsKey('category_id')) {
       inival = prov.washFormMap['category_id'];
     }
     List<ListTileTheme> ctgItems = [];
-    prov.categories.forEach((map) {
+    prov.categories?.forEach((map) {
       ctgItems.add(
         ListTileTheme(
           contentPadding: EdgeInsets.all(0),
@@ -178,13 +178,13 @@ class _WashFormState extends State<WashForm> {
             value: map['id'],
             groupValue: inival,
             onChanged: canEdit
-                ? (String value) {
-                    prov.formAttr('category_id', value);
+                ? (String? value) {
+                    prov.formAttr('category_id', value!);
                     FocusScopeNode currentFocus = FocusScope.of(context);
                     if (!currentFocus.hasPrimaryFocus &&
                         currentFocus.focusedChild != null) {
                       //currentFocus.focusedChild.unfocus();
-                      FocusManager.instance.primaryFocus.unfocus();
+                      FocusManager.instance.primaryFocus?.unfocus();
                     }
                   }
                 : null,
@@ -199,12 +199,12 @@ class _WashFormState extends State<WashForm> {
   }
 
   Widget discRadioList(BuildContext context, RootProvider prov) {
-    String inival;
+    String? inival;
     if (prov.washFormMap.containsKey('discount_id')) {
       inival = prov.washFormMap['discount_id'];
     }
     List<ListTileTheme> items = [];
-    prov.discounts.forEach((map) {
+    prov.discounts?.forEach((map) {
       String discStr = map['discount'];
       if (map['is_pct'] == '1') {
         discStr += '%';
@@ -221,13 +221,13 @@ class _WashFormState extends State<WashForm> {
             groupValue: inival,
             toggleable: true,
             onChanged: canEdit
-                ? (String value) {
-                    prov.formAttr('discount_id', value);
+                ? (String? value) {
+                    prov.formAttr('discount_id', value!);
                     FocusScopeNode currentFocus = FocusScope.of(context);
                     if (!currentFocus.hasPrimaryFocus &&
                         currentFocus.focusedChild != null) {
                       //currentFocus.focusedChild.unfocus();
-                      FocusManager.instance.primaryFocus.unfocus();
+                      FocusManager.instance.primaryFocus?.unfocus();
                     }
                   }
                 : null,
@@ -244,7 +244,7 @@ class _WashFormState extends State<WashForm> {
 //not used
   Widget ctgDropList(RootProvider prov) {
     List<DropdownMenuItem<String>> ctgItems = [];
-    prov.categories.forEach((map) {
+    prov.categories?.forEach((map) {
       ctgItems.add(DropdownMenuItem<String>(
         value: map['server_id'],
         child: Padding(
@@ -254,7 +254,7 @@ class _WashFormState extends State<WashForm> {
       ));
     });
 
-    String inival;
+    String? inival;
     if (prov.washFormMap.containsKey('category_id')) {
       inival = prov.washFormMap['category_id'];
     }
@@ -266,7 +266,7 @@ class _WashFormState extends State<WashForm> {
         labelText: 'Категория',
       ), */
       onChanged: (ctgId) {
-        prov.formAttr('category_id', ctgId);
+        prov.formAttr('category_id', ctgId!);
       },
       value: inival,
     );
@@ -274,12 +274,12 @@ class _WashFormState extends State<WashForm> {
 
   Widget serviceRadioList(BuildContext context, RootProvider prov) {
     //cprint('washFormMap ${prov.washFormMap}');
-    String inival;
+    String? inival;
     if (prov.washFormMap.containsKey('service_id')) {
       inival = prov.washFormMap['service_id'];
     }
     List<ListTileTheme> ctgItems = [];
-    prov.services.forEach((map) {
+    prov.services?.forEach((map) {
       if (map['only_secondary'] == '0' && map['can_be_secondary'] == '0') {
         ctgItems.add(
           ListTileTheme(
@@ -290,13 +290,13 @@ class _WashFormState extends State<WashForm> {
               value: map['id'],
               groupValue: inival,
               onChanged: canEdit
-                  ? (String value) {
-                      prov.formService2(value);
+                  ? (String? value) {
+                      prov.formService2(value!);
                       FocusScopeNode currentFocus = FocusScope.of(context);
                       if (!currentFocus.hasPrimaryFocus &&
                           currentFocus.focusedChild != null) {
                         //currentFocus.focusedChild.unfocus();
-                        FocusManager.instance.primaryFocus.unfocus();
+                        FocusManager.instance.primaryFocus?.unfocus();
                       }
                     }
                   : null,
@@ -313,12 +313,12 @@ class _WashFormState extends State<WashForm> {
 
   List<Widget> extraServiceCheckBoxList(
       RootProvider prov, List<Widget> widList) {
-    prov.services.forEach((servMap) {
+    prov.services?.forEach((servMap) {
       if (servMap['only_secondary'] == '1' ||
           servMap['can_be_secondary'] == '1') {
         var servChange = canEdit
-            ? (bool value) {
-                prov.formService(servMap['id'], value);
+            ? (bool? value) {
+                prov.formService(servMap['id'], value!);
               }
             : null;
         widList.add(
@@ -342,7 +342,7 @@ class _WashFormState extends State<WashForm> {
 
   Widget showPrice(RootProvider cons) {
     return Selector<RootProvider, String>(
-        selector: (context, prov) => prov.formPriceShow,
+        selector: (context, prov) => prov.formPriceShow ?? '',
         builder: (context, price, child) {
           //cprint('showPrice build');
           if (prov.formPriceShow != null) {
@@ -367,7 +367,7 @@ class _WashFormState extends State<WashForm> {
 
   void getImage(RootProvider prov) async {
     //cprint('washForm getImage start');
-    final pickedFile = await picker.getImage(
+    final pickedFile = await picker.pickImage(
         source: ImageSource.camera, maxHeight: 1000.0, maxWidth: 1000.0);
     //cprint('washForm getImage finish');
     //prov.setCameraImg(pickedFile.path);
@@ -375,7 +375,7 @@ class _WashFormState extends State<WashForm> {
     //prov.setCameraImg2(fixedFile);
 
     //cprint('washForm getImageAndSave start');
-    File fixedFile = await getImageAndSave(pickedFile.path);
+    File fixedFile = await getImageAndSave(pickedFile!.path);
     //cprint('washForm getImageAndSave finish');
     prov.setCameraImg(fixedFile.path);
   }
@@ -385,7 +385,7 @@ class _WashFormState extends State<WashForm> {
     return image;
   }
 
-  Widget theForm(BuildContext context, int id) {
+  Widget theForm(BuildContext context, int? id) {
     if (prov.errorMessage != '') {
       return Text(prov.errorMessage);
     }
@@ -513,7 +513,7 @@ class _WashFormState extends State<WashForm> {
             backgroundColor: Colors.green,
             padding: EdgeInsets.symmetric(vertical: 6.0)),
         onPressed: () {
-          Future<int> subm = prov.submit(mode);
+          Future<int?> subm = prov.submit(mode);
           subm.then((id) {
             if (id != null) {
               new Future.delayed(new Duration(milliseconds: 100), () {
@@ -541,23 +541,23 @@ class _WashFormState extends State<WashForm> {
 
   List<Widget> photoList(List<Widget> widList) {
     List<Widget> photosList = [];
-    if (wash != null && wash.photo != null) {
-      var photos = wash.photo.split(';');
+    if (wash != null && wash!.photo != null) {
+      var photos = wash!.photo.split(';');
       photos.forEach((path) {
         photosList.add(CachedNetworkImage(
             imageUrl: Endpoints.baseUrl + path, fit: BoxFit.fitHeight));
         photosList.add(SizedBox(width: 3.0));
       });
     }
-    if (wash != null && wash.photoLocal != null) {
-      var photos = wash.photoLocal.split(';');
+    if (wash != null && wash!.photoLocal != null) {
+      var photos = wash!.photoLocal.split(';');
       photos.forEach((path) {
         photosList.add(Image.file(File(path), fit: BoxFit.fitHeight));
         photosList.add(SizedBox(width: 3.0));
       });
     }
-    if (prov.cameraImgs.isNotEmpty) {
-      prov.cameraImgs.forEach((path) {
+    if (prov.cameraImgs!.isNotEmpty) {
+      prov.cameraImgs!.forEach((path) {
         photosList.add(Image.file(File(path), fit: BoxFit.fitHeight));
         photosList.add(SizedBox(width: 3.0));
       });
@@ -583,14 +583,14 @@ class _WashFormState extends State<WashForm> {
       child: Text('Персонал', style: TextStyle(color: Colors.blue)),
       padding: EdgeInsets.only(top: 16.0),
     ));
-    prov.boxes.forEach((box) {
+    prov.boxes?.forEach((box) {
       List<String> subtitle = [];
 
       if (prov.washFormMap.containsKey('washers') &&
           prov.washFormMap['washers'].containsKey(box['id'])) {
         prov.washFormMap['washers'][box['id']].forEach((userId) {
           if (prov.washersMap.containsKey(int.parse(userId))) {
-            subtitle.add(prov.washersMap[int.parse(userId)]['name']);
+            subtitle.add(prov.washersMap[int.parse(userId)]!['name']);
           }
         });
       }
@@ -651,7 +651,7 @@ class UpperCaseTextFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
     return TextEditingValue(
-      text: newValue.text?.toUpperCase(),
+      text: newValue.text.toUpperCase(),
       selection: newValue.selection,
     );
   }

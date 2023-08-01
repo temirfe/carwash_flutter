@@ -438,7 +438,7 @@ class RootProvider with ChangeNotifier {
                 (priceMap['category_id'].toString() ==
                         washFormMap['category_id'] ||
                     priceMap['category_id'] == null)) {
-              thePrice += int.parse(priceMap['price']);
+              thePrice += int.parse(priceMap['price'].toString());
               //cprint('setting fp is good $formPriceShow');
             }
           });

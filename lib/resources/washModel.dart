@@ -66,7 +66,7 @@ class Wash {
         updates = fromJson['updates'];
 
   static setPlate(String plate) {
-    if (plate == '' || plate == null) {
+    if (plate == '') {
       return '---';
     }
     return plate;
@@ -89,23 +89,19 @@ class Wash {
 
   static fillWashers(List washer) {
     List washers = [];
-    if (washer != null) {
-      washer.forEach((washerMap) {
-        washers.add(washerMap['name']);
-      });
-      return washers.join(', ');
-    }
+    washer.forEach((washerMap) {
+      washers.add(washerMap['name']);
+    });
+    return washers.join(', ');
     return null;
   }
 
   static fillWasherIds(List washer) {
-    if (washer != null) {
-      List<String> washers = [];
-      washer.forEach((washerMap) {
-        washers.add(washerMap['id'].toString());
-      });
-      return washers;
-    }
+    List<String> washers = [];
+    washer.forEach((washerMap) {
+      washers.add(washerMap['id'].toString());
+    });
+    return washers;
     return null;
   }
 
@@ -179,20 +175,18 @@ class Wash {
         ' ' +
         DateFormat('H:mm').format(startTime);
     timeMap['start'] = startTimeFormatted;
-    if (wash.finishedAt != null) {
-      DateTime endTime =
-          new DateTime.fromMillisecondsSinceEpoch(wash.finishedAt * 1000);
-      String endTimeFormatted = DateFormat('H:mm').format(endTime);
-      Duration difference = endTime.difference(startTime);
-      if (difference.inDays > 0) {
-        endTimeFormatted = '${endTime.day} ' +
-            monthsAbbr[startTime.month] +
-            ' ' +
-            DateFormat('H:mm').format(endTime);
-      }
-      timeMap['end'] = endTimeFormatted;
-      timeMap['duration'] = _formatDuration(difference);
+    DateTime endTime =
+        new DateTime.fromMillisecondsSinceEpoch(wash.finishedAt * 1000);
+    String endTimeFormatted = DateFormat('H:mm').format(endTime);
+    Duration difference = endTime.difference(startTime);
+    if (difference.inDays > 0) {
+      endTimeFormatted = '${endTime.day} ' +
+          monthsAbbr[startTime.month] +
+          ' ' +
+          DateFormat('H:mm').format(endTime);
     }
+    timeMap['end'] = endTimeFormatted;
+    timeMap['duration'] = _formatDuration(difference);
     this.time = timeMap;
   }
 
@@ -200,31 +194,29 @@ class Wash {
     DateTime startTime = new DateTime.fromMillisecondsSinceEpoch(start * 1000);
     List<Widget> trow = [text16(DateFormat('H:mm').format(startTime))];
 
-    if (finish != null) {
-      DateTime endTime = new DateTime.fromMillisecondsSinceEpoch(finish * 1000);
-      String endTimeFormatted = DateFormat('H:mm').format(endTime);
-      Duration difference = endTime.difference(startTime);
-      if (difference.inDays > 0) {
-        endTimeFormatted = '${endTime.day} ' +
-            monthsAbbr[startTime.month] +
-            ' ' +
-            DateFormat('H:mm').format(endTime);
-      }
-      trow.add(Text(' - '));
-      trow.add(text16(endTimeFormatted));
-      trow.add(SizedBox(width: 5.0));
-
-      String durStr = _formatDuration(difference);
-      Color clr;
-      if (durStatus == 1) {
-        clr = Colors.green;
-      } else if (durStatus == 2) {
-        clr = Colors.red[300];
-      }
-      trow.add(text16('('));
-      trow.add(text16(durStr, clr: clr));
-      trow.add(text16(')'));
+    DateTime endTime = new DateTime.fromMillisecondsSinceEpoch(finish * 1000);
+    String endTimeFormatted = DateFormat('H:mm').format(endTime);
+    Duration difference = endTime.difference(startTime);
+    if (difference.inDays > 0) {
+      endTimeFormatted = '${endTime.day} ' +
+          monthsAbbr[startTime.month] +
+          ' ' +
+          DateFormat('H:mm').format(endTime);
     }
+    trow.add(Text(' - '));
+    trow.add(text16(endTimeFormatted));
+    trow.add(SizedBox(width: 5.0));
+
+    String durStr = _formatDuration(difference);
+    Color clr = Colors.black;
+    if (durStatus == 1) {
+      clr = Colors.green;
+    } else if (durStatus == 2) {
+      clr = Colors.red[300]!;
+    }
+    trow.add(text16('('));
+    trow.add(text16(durStr, clr: clr));
+    trow.add(text16(')'));
     return Row(children: trow);
   }
 

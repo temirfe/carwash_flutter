@@ -6,7 +6,7 @@ Widget analytics(BuildContext context, RootProvider prov) {
   if (prov.errorMessage != '') {
     return Text(prov.errorMessage);
   }
-  if (prov.analyticsList == null || prov.analyticsList.isEmpty) {
+  if (prov.analyticsList == null || prov.analyticsList!.isEmpty) {
     return Text('Нет данных');
   } else {
     int washCount = 0;
@@ -15,23 +15,23 @@ Widget analytics(BuildContext context, RootProvider prov) {
     int totalPricePaid = 0;
     int discount = 0;
     Map<int, Map<String, dynamic>> washers = {};
-    prov.analyticsList.forEach((map) {
+    prov.analyticsList?.forEach((map) {
       washCount++;
       if (map['price'] != null) {
-        totalPrice += map['price'];
+        totalPrice += int.parse(map['price'].toString());
       }
       if (map['final_price'] != null) {
-        discountPrice += map['final_price'];
+        discountPrice += int.parse(map['final_price'].toString());
       }
       discount = totalPrice - discountPrice;
       if (map['paid'] == 1) {
-        totalPricePaid += map['final_price'];
+        totalPricePaid += int.parse(map['final_price'].toString());
       }
       map['boxes'].forEach((bmap) {
         bmap['washers'].forEach((wmap) {
           int wage = wmap['wage_final'] == null ? 0 : wmap['wage_final'];
           if (washers.containsKey(wmap['id'])) {
-            washers[wmap['id']]['wage'] += wage;
+            washers[wmap['id']]!['wage'] += wage;
           } else {
             washers[wmap['id']] = {'name': wmap['name'], 'wage': wage};
           }

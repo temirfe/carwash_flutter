@@ -12,7 +12,6 @@ import 'package:carwash/resources/endpoints.dart';
 //import 'package:carwash/resources/dbhelper.dart';
 import 'washForm.dart';
 import 'photoView.dart';
-import 'addService.dart';
 
 class WashView extends StatefulWidget {
   //final int id;
@@ -24,7 +23,7 @@ class WashView extends StatefulWidget {
 }
 
 class _WashViewState extends State<WashView> {
-  RootProvider prov;
+  late RootProvider prov;
 
   @override
   void initState() {
@@ -38,7 +37,7 @@ class _WashViewState extends State<WashView> {
     Text paidString;
 
     return Consumer<RootProvider>(builder: (context, prov, child) {
-      Wash wash = prov.washesMap[mid];
+      Wash? wash = prov.washesMap[mid];
       if (wash == null) {
         return Container();
       }
@@ -72,7 +71,7 @@ class _WashViewState extends State<WashView> {
         boxes(wash.id, wash.boxes)
       ];
 
-      if (wash.comment != null && wash.comment != '') {
+      if (wash.comment != '') {
         viewList.add(SizedBox(height: 12.0));
         viewList.add(Text('Коммент',
             style: TextStyle(fontSize: 12.0, color: Colors.grey)));
@@ -129,7 +128,7 @@ class _WashViewState extends State<WashView> {
         paidString
       ])
     ];
-    if (wash.discount != null && wash.discount.isNotEmpty) {
+    if (wash.discount.isNotEmpty) {
       String discStr = wash.discount['discount'].toString();
       if (wash.discount['is_pct'] == 1) {
         discStr += '%';
@@ -246,8 +245,8 @@ class _WashViewState extends State<WashView> {
       stream: prov.mapStrmCtrl.stream,
       builder: (context, AsyncSnapshot<Map> snapshot) {
         if (snapshot.hasData &&
-            snapshot.data.containsKey('second') &&
-            snapshot.data['second']) {
+            snapshot.data!.containsKey('second') &&
+            snapshot.data!['second']) {
           btnChild = Container(
               width: 18,
               height: 18,
@@ -273,8 +272,8 @@ class _WashViewState extends State<WashView> {
       stream: prov.mapStrmCtrl.stream,
       builder: (context, AsyncSnapshot<Map> snapshot) {
         if (snapshot.hasData &&
-            snapshot.data.containsKey('paid') &&
-            snapshot.data['paid']) {
+            snapshot.data!.containsKey('paid') &&
+            snapshot.data!['paid']) {
           btnChild = Container(
               width: 18,
               height: 18,
@@ -301,8 +300,8 @@ class _WashViewState extends State<WashView> {
       stream: prov.mapStrmCtrl.stream,
       builder: (context, AsyncSnapshot<Map> snapshot) {
         if (snapshot.hasData &&
-            snapshot.data.containsKey('finish') &&
-            snapshot.data['finish']) {
+            snapshot.data!.containsKey('finish') &&
+            snapshot.data!['finish']) {
           btnChild = Container(
               width: 18,
               height: 18,
@@ -322,8 +321,8 @@ class _WashViewState extends State<WashView> {
     );
   }
 
-  List washersSel(List widList) {
-    prov.washers.forEach((map) {
+  List<Widget> washersSel(List<Widget> widList) {
+    prov.washers?.forEach((map) {
       bool washerBool = false;
       prov.subserv2Map['washers'].forEach((wid) {
         if (wid == map['id']) {
@@ -338,7 +337,7 @@ class _WashViewState extends State<WashView> {
             title: new Text(map['username']),
             controlAffinity: ListTileControlAffinity.leading,
             value: washerBool,
-            onChanged: (bool value) {
+            onChanged: (bool? value) {
               //prov.formWasher(map['id'], value);
             },
           ),
@@ -350,7 +349,7 @@ class _WashViewState extends State<WashView> {
 
   Widget updWidget(Wash wash) {
     List<Widget> updRows = [];
-    if (wash.updates != null && wash.updates.isNotEmpty) {
+    if (wash.updates.isNotEmpty) {
       updRows.add(SizedBox(height: 12.0));
       updRows.add(Text('Изменения',
           style: TextStyle(fontSize: 12.0, color: Colors.grey)));
@@ -358,11 +357,11 @@ class _WashViewState extends State<WashView> {
         List<Widget> updText = [];
         String oldVal = '', newVal = '';
         if (updRow['field'] == 'service_id') {
-          oldVal = prov.servNameMap[int.parse(updRow['old_value'])];
-          newVal = prov.servNameMap[int.parse(updRow['new_value'])];
+          oldVal = prov.servNameMap[int.parse(updRow['old_value'])]!;
+          newVal = prov.servNameMap[int.parse(updRow['new_value'])]!;
         } else if (updRow['field'] == 'category_id') {
-          oldVal = prov.ctgNameMap[int.parse(updRow['old_value'])];
-          newVal = prov.ctgNameMap[int.parse(updRow['new_value'])];
+          oldVal = prov.ctgNameMap[int.parse(updRow['old_value'])]!;
+          newVal = prov.ctgNameMap[int.parse(updRow['new_value'])]!;
         } else {
           oldVal = updRow['old_value'] == null ? 'пусто' : updRow['old_value'];
           newVal = updRow['new_value'] == null ? 'пусто' : updRow['new_value'];
@@ -401,45 +400,41 @@ class _WashViewState extends State<WashView> {
 
   Widget pic(Wash wash) {
     List<Widget> photosList = [];
-    if (wash != null && wash.photo != null) {
-      var photos = wash.photo.split(';');
-      photos.forEach((photoUrl) {
-        photosList.add(
-          GestureDetector(
-            child: CachedNetworkImage(
-                imageUrl: Endpoints.baseUrl + photoUrl, fit: BoxFit.fitHeight),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    maintainState: false,
-                    builder: (context) => MyPhotoView(photoUrl),
-                  ));
-            },
-          ),
-        );
-        photosList.add(SizedBox(width: 3.0));
-      });
-    }
-    if (wash != null && wash.photoLocal != null) {
-      var photos = wash.photoLocal.split(';');
-      photos.forEach((photoPath) {
-        photosList.add(
-          GestureDetector(
-            child: Image.file(File(photoPath), fit: BoxFit.fitHeight),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    maintainState: false,
-                    builder: (context) => MyPhotoView(photoPath, local: true),
-                  ));
-            },
-          ),
-        );
-        photosList.add(SizedBox(width: 3.0));
-      });
-    }
+    var photos = wash.photo.split(';');
+    photos.forEach((photoUrl) {
+      photosList.add(
+        GestureDetector(
+          child: CachedNetworkImage(
+              imageUrl: Endpoints.baseUrl + photoUrl, fit: BoxFit.fitHeight),
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  maintainState: false,
+                  builder: (context) => MyPhotoView(photoUrl),
+                ));
+          },
+        ),
+      );
+      photosList.add(SizedBox(width: 3.0));
+    });
+    var photos2 = wash.photoLocal.split(';');
+    photos2.forEach((photoPath) {
+      photosList.add(
+        GestureDetector(
+          child: Image.file(File(photoPath), fit: BoxFit.fitHeight),
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  maintainState: false,
+                  builder: (context) => MyPhotoView(photoPath, local: true),
+                ));
+          },
+        ),
+      );
+      photosList.add(SizedBox(width: 3.0));
+    });
 
     if (photosList.isNotEmpty) {
       return Container(
@@ -454,11 +449,11 @@ class _WashViewState extends State<WashView> {
   }
 
   Widget phone(String phone) {
-    if (phone != null && phone != '') {
+    if (phone != '') {
       _launchCaller() async {
         var url = "tel:$phone";
-        if (await canLaunch(url)) {
-          await launch(url);
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url));
         }
       }
 
@@ -479,7 +474,7 @@ class _WashViewState extends State<WashView> {
   }
 
   Widget marka(Wash wash) {
-    if (wash.marka != null && wash.marka != '') {
+    if (wash.marka != '') {
       return Row(children: [lbl('Марка'), text16(wash.marka)]);
     }
     return Container(width: 0.0, height: 0.0);

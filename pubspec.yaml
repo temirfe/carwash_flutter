@@ -44,7 +44,6 @@ dependencies:
   device_info_plus: ^9.0.2
   flutter_exif_rotation: ^0.5.1
   intl: ^0.18.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

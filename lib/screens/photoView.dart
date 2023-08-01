@@ -6,12 +6,12 @@ import 'package:carwash/resources/endpoints.dart';
 
 class MyPhotoView extends StatelessWidget {
   final url;
-  final bool local;
+  final bool? local;
   MyPhotoView(this.url, {this.local});
   @override
   Widget build(BuildContext context) {
     ImageProvider img;
-    if (local != null && local) {
+    if (local != null && local!) {
       img = FileImage(File(url));
     } else {
       img = CachedNetworkImageProvider(Endpoints.baseUrl + url);

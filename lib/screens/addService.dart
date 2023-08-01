@@ -12,7 +12,7 @@ class AddService extends StatefulWidget {
 }
 
 class _AddServiceState extends State<AddService> {
-  RootProvider prov;
+  late RootProvider prov;
 
   @override
   void initState() {
@@ -55,12 +55,12 @@ class _AddServiceState extends State<AddService> {
   }
 
   Widget serviceRadioList(BuildContext context, RootProvider prov) {
-    String inival;
+    String? inival;
     if (prov.addServMap.containsKey('service_id')) {
       inival = prov.addServMap['service_id'];
     }
     List<ListTileTheme> ctgItems = [];
-    prov.services.forEach((map) {
+    prov.services?.forEach((map) {
       if (map['can_be_secondary'] == '1' || map['only_secondary'] == '1') {
         ctgItems.add(
           ListTileTheme(
@@ -70,8 +70,8 @@ class _AddServiceState extends State<AddService> {
               title: Text(map['title']),
               value: map['id'],
               groupValue: inival,
-              onChanged: (String value) {
-                prov.addServSelect('service_id', value);
+              onChanged: (String? value) {
+                prov.addServSelect('service_id', value!);
               },
             ),
           ),
@@ -85,12 +85,12 @@ class _AddServiceState extends State<AddService> {
   }
 
   Widget discountRadioList(BuildContext context, RootProvider prov) {
-    String inival;
+    String? inival;
     if (prov.addServMap.containsKey('discount_id')) {
       inival = prov.addServMap['discount_id'];
     }
     List<ListTileTheme> ctgItems = [];
-    prov.discounts.forEach((map) {
+    prov.discounts?.forEach((map) {
       String title = map['discount'];
       if (map['is_pct'] == '1') {
         title += '%';
@@ -105,8 +105,8 @@ class _AddServiceState extends State<AddService> {
             title: Text(title),
             value: map['id'],
             groupValue: inival,
-            onChanged: (String value) {
-              prov.addServSelect('discount_id', value);
+            onChanged: (String? value) {
+              prov.addServSelect('discount_id', value!);
             },
           ),
         ),
@@ -118,8 +118,8 @@ class _AddServiceState extends State<AddService> {
     );
   }
 
-  List washersSel(List widList) {
-    prov.washers.forEach((map) {
+  List<Widget> washersSel(List<Widget> widList) {
+    prov.washers?.forEach((map) {
       bool washerBool = false;
       prov.addServMap['washers'].forEach((wid) {
         if (wid == map['id']) {
@@ -134,7 +134,7 @@ class _AddServiceState extends State<AddService> {
             title: new Text(map['username']),
             controlAffinity: ListTileControlAffinity.leading,
             value: washerBool,
-            onChanged: (bool value) {
+            onChanged: (bool? value) {
               //prov.formWasher(map['id'], value);
             },
           ),
@@ -164,8 +164,8 @@ class _AddServiceState extends State<AddService> {
       stream: prov.mapStrmCtrl.stream,
       builder: (context, AsyncSnapshot<Map> snapshot) {
         if (snapshot.hasData &&
-            snapshot.data.containsKey('addService') &&
-            snapshot.data['addService']) {
+            snapshot.data!.containsKey('addService') &&
+            snapshot.data!['addService']) {
           btnChild = Container(
               width: 18,
               height: 18,

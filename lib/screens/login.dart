@@ -2,11 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:data_connection_checker/data_connection_checker.dart';
 import 'home.dart';
-import 'package:carwash/resources/session.dart';
 import 'package:carwash/resources/provider.dart';
-import 'package:carwash/resources/dbhelper.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -14,12 +11,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginScreenPage extends State<LoginPage> {
-  FocusNode focus;
+  late FocusNode focus;
   final _loginTC = new TextEditingController();
   final _passTC = new TextEditingController();
   //Stream myStream;
-  StreamController<bool> connectionStreamController;
-  RootProvider prov;
+  late StreamController<bool> connectionStreamController;
+  late RootProvider prov;
 
   @override
   void initState() {
@@ -29,13 +26,13 @@ class _LoginScreenPage extends State<LoginPage> {
 
     //myStream = timedCounter(Duration(seconds: 2));
     connectionStreamController = StreamController<bool>();
-    checkConnection();
+    //checkConnection();
 
     prov = Provider.of<RootProvider>(context, listen: false);
     prov.formRequests();
   }
 
-  void checkConnection() {
+  /* void checkConnection() {
     //return hasConnection;
     Timer.periodic(Duration(seconds: 3), (timer) async {
       bool hasConnection = await DataConnectionChecker().hasConnection;
@@ -45,7 +42,7 @@ class _LoginScreenPage extends State<LoginPage> {
         connectionStreamController.sink.add(hasConnection);
       }
     });
-  }
+  } */
 
   @override
   void dispose() {
@@ -70,7 +67,7 @@ class _LoginScreenPage extends State<LoginPage> {
     return StreamBuilder<bool>(
       stream: connectionStreamController.stream,
       builder: (context, snapshot) {
-        if (snapshot.hasData && !snapshot.data) {
+        if (snapshot.hasData && snapshot.data != null) {
           return Text(
             'Нет подключения к сети!',
             style: TextStyle(color: Colors.red),
@@ -92,7 +89,7 @@ class _LoginScreenPage extends State<LoginPage> {
           SizedBox(height: 24.0),
           prov.versionInfo(),
           SizedBox(height: 10.0),
-          inetInfo(),
+          //inetInfo(),
         ];
         return Column(
           children: childrn,
@@ -115,7 +112,7 @@ class _LoginScreenPage extends State<LoginPage> {
           labelText: 'Логин',
           errorText: prov.loginError,
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.yellow[800], width: 2.0),
+            borderSide: BorderSide(color: Colors.yellow[800]!, width: 2.0),
           ),
         ),
       ),
@@ -134,7 +131,7 @@ class _LoginScreenPage extends State<LoginPage> {
           labelText: 'Пароль',
           errorText: prov.loginError,
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.yellow[800], width: 2.0),
+            borderSide: BorderSide(color: Colors.yellow[800]!, width: 2.0),
           ),
         ),
       ),
@@ -144,7 +141,7 @@ class _LoginScreenPage extends State<LoginPage> {
   Widget submitButton(BuildContext ctx, RootProvider prov) {
     // cprint('submitButton ${prov.isSubmitting}');
     Widget contnt;
-    Function onPresd;
+    Function onPresd = () {};
     if (prov.isSubmitting) {
       contnt = new CircularProgressIndicator(
           valueColor: new AlwaysStoppedAnimation<Color>(Colors.white));
@@ -171,7 +168,9 @@ class _LoginScreenPage extends State<LoginPage> {
 
     return SizedBox(
       child: ElevatedButton(
-        onPressed: onPresd,
+        onPressed: () {
+          onPresd();
+        },
         child: contnt,
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).primaryColor,
